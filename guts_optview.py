@@ -1,34 +1,18 @@
 from gravity import G as Gconst
 
-try:
-    from PyQt6.QtCore import QObject, pyqtSlot
-    from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtWidgets import (QMainWindow,
-                                 QComboBox,
-                                 QDialog,
-                                 QDoubleSpinBox,
-                                 QGroupBox,
-                                 QHBoxLayout,
-                                 QLabel,
-                                 QLineEdit,
-                                 QPushButton,
-                                 QSpinBox,
-                                 QVBoxLayout,
-                                 QWidget)
-except:
-    from PyQt5.QtCore import QObject, pyqtSlot
-    from PyQt5.QtWidgets import (QMainWindow,
-                                 QComboBox,
-                                 QDialog,
-                                 QDoubleSpinBox,
-                                 QGroupBox,
-                                 QHBoxLayout,
-                                 QLabel,
-                                 QLineEdit,
-                                 QPushButton,
-                                 QSpinBox,
-                                 QVBoxLayout,
-                                 QWidget)
+from PyQt6.QtCore import QObject, pyqtSlot
+from PyQt6.QtWidgets import (QMainWindow,
+                             QComboBox,
+                             QDialog,
+                             QDoubleSpinBox,
+                             QGroupBox,
+                             QHBoxLayout,
+                             QLabel,
+                             QLineEdit,
+                             QPushButton,
+                             QSpinBox,
+                             QVBoxLayout,
+                             QWidget)
 
 
 def _stof(text):
@@ -239,10 +223,23 @@ class OptionsView(QDialog):
         hbox.addWidget(wgt)
         pvbox.addLayout(hbox)
 
+        trailLenLBL = QLabel()
+        trailLenLBL.setText("Trail Length:")
+
+        trailLenSBX = QSpinBox()
+        trailLenSBX.setRange(1, 10000)
+        trailLenSBX.setValue(1000)
+        trailLenSBX.setSingleStep(100)
+        trailLenSBX.valueChanged.connect(ctlr.trailLengthChanged)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(trailLenLBL)
+        hbox.addWidget(trailLenSBX)
+        pvbox.addLayout(hbox)
+
     def _massMaxChangeDone(self):
         text = self._massMaxLE.text()
         massRange = self._optCtrlr.massRange()
-        print(f"_massMaxChangeDone: {text} {massRange}")
         newMax = _stof(text)
         if newMax is not None:
             if newMax > massRange[0]:
@@ -253,7 +250,6 @@ class OptionsView(QDialog):
     def _massMinChangeDone(self):
         text = self._massMinLE.text()
         massRange = self._optCtrlr.massRange()
-        print(f"_massMinChangeDone: {text} {massRange}")
         newMin = _stof(text)
         if newMin is not None:
             if newMin < massRange[1]:
@@ -264,7 +260,6 @@ class OptionsView(QDialog):
     def _posMaxChangeDone(self):
         text = self._posMaxLE.text()
         posRange = self._optCtrlr.positionRange()
-        print(f"_posMaxChangeDone: {text} {posRange}")
         newMax = _stof(text)
         if newMax is not None:
             if newMax > posRange[0]:
@@ -275,7 +270,6 @@ class OptionsView(QDialog):
     def _posMinChangeDone(self):
         text = self._posMinLE.text()
         posRange = self._optCtrlr.positionRange()
-        print(f"_posMinChangeDone: {text} {posRange}")
         newMin = _stof(text)
         if newMin is not None:
             if newMin < posRange[1]:
@@ -286,7 +280,6 @@ class OptionsView(QDialog):
     def _velMaxChangeDone(self):
         text = self._velMaxLE.text()
         velRange = self._optCtrlr.velocityRange()
-        print(f"_velMaxChangeDone: {text} {velRange}")
         newMax = _stof(text)
         if newMax is not None:
             if newMax > velRange[0]:
@@ -297,7 +290,6 @@ class OptionsView(QDialog):
     def _velMinChangeDone(self):
         text = self._velMinLE.text()
         velRange = self._optCtrlr.velocityRange()
-        print(f"_velMinChangeDone: {text} {velRange}")
         newMin = _stof(text)
         if newMin is not None:
             if newMin < velRange[1]:

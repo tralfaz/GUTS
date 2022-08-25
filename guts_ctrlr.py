@@ -153,6 +153,12 @@ class GutsController(object):
                                                 spherical=True)
             newVis.parent = self._vpView.scene
 
+            self._trailLen += 1
+            if self._trailLen > self._trailMax:
+                subSceneKids = self._vpView.children[0].children
+                if len(subSceneKids) > 2:
+                    subSceneKids[2].parent = None
+
         elif mode in ("Move", "Radii", "Trails") and self._firstMarkers:
             self._firstMarkers.set_data(pos=newPos, size=bodySizes,
                                         edge_width=0.0,
@@ -293,15 +299,13 @@ class GutsController(object):
     def setUIView(self, uiView):
         self._optionsUI = uiView
         
+    def trailLengthChanged(self, value):
+        self._trailMax = value
+
     def velocityRange(self):
         return self._gravity.velocityRange()
 
     def _vpAppTimerCB(self, event):
-        print(f"Timer: blocked={event.blocked}, count={event.count} dt={event.dt}")
-        #'elapsed', 'handled', 'iteration', 'native', 'source', 'sources', 'type'
-        self.advanceOneFrame(self._frameMode)
-            
-    def _vpAppTimerCB(self, event):
-#        print(f"Timer: blocked={event.blocked}, count={event.count} dt={event.dt}")
+        #print(f"Timer: blocked={event.blocked}, count={event.count} dt={event.dt}")
         #'elapsed', 'handled', 'iteration', 'native', 'source', 'sources', 'type'
         self.advanceOneFrame(self._frameMode)

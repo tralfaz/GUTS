@@ -83,6 +83,10 @@ Options
      to produce each realtime second.  The "auto" value will attempt to create
      as many frames a second that is reasonable.
 
+  Trail Length:
+     Set maximum trail length when in Add or Trails mode.  The value of Trail
+     Length can be much larger in Trails mode then in Add mode.
+
 
 Required Runtime Environment
 -----------------------------------------
