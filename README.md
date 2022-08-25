@@ -55,18 +55,22 @@ Options
      interaction. 
 
   Mass Range:
-     The range of random mass, in Kilograms, assigned to each random mass.
+     The range of random mass, in Kilograms, assigned to each random body.
 
   Position Range:
+     The range of random X,Y,Z axis  coordinates, used to assign a 3D position
+     to each random body.
 
   Velocity Range:
+     The random range of X,Y,Z velocity vectors, in meters per second, to
+     assign to each random body.  Keep small to ensure bodies stay in view.
 
   Frame Modes:
   
      Add - Adds new markers with each frame step.  Produces something like Anime
            tentacle porn.  Who doesn't like anime tentacle porn.
 
-     Move - Each body maker is moved with each frame step.  Produces speres 
+     Move - Each body marker is moved with each frame step.  Produces speres 
             zooming around in space.
 
      Radii - Like Move but with lines from each body to the scene origin.
@@ -89,13 +93,13 @@ Python:
 Using the pip3 utility provided with your python installation, install
 the following:
 
-  vispy
+  vispy:
      pip3 install numpy
 
-  PyQt6
+  PyQt6:
      pip3 install PyQt6
 
-  vispy
+  vispy:
      pip3 intstall vispy
 
 
