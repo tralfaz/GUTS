@@ -54,7 +54,7 @@ class Gravity(object):
         self._masses += self._massRange[0]
 
         # Create colors and sizes body visuals
-        self._massToSizeFactor = 1.0
+        self._massToSizeFactor = 1.0 / 100.0
         self._sizes = self._masses * self._massToSizeFactor
         self._colors = numpy.random.rand(self._bodyCount, 3)
 
