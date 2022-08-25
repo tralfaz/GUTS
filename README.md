@@ -85,8 +85,8 @@ Python:
    Begin by installing Python 3.10.  Download the appropriate release for your
    O/S from https://www.python.org/downloads/
 
-Using the pip3 utility provided with your python istallation, unstall the 
-following:
+Using the pip3 utility provided with your python installation, install
+the following:
 
   vispy
      pip3 install numpy
