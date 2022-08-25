@@ -168,13 +168,14 @@ class GutsController(object):
                     rVis.set_data(pos=pnts)
             elif mode == "Trails":
                 bodies = newPos.shape[0]
-                print(f"TRAIL LEN: {self._trailLen}")
+                if self._trails is None:
+                    self._trails = newPos
+                    return
+                #print(f"TRAIL LEN: {self._trailLen}")
                 if self._trailLen == 0:
                     newLen = self._trailLen + 1
                     newTrails = self._trails.reshape(bodies, newLen*3)
-                    print(f"newTrails: ", newTrails)
                     newTrails = numpy.concatenate((newTrails,newPos), axis=1)
-                    print(f"newTrails-plus: ", newTrails)
                     self._trails = newTrails.reshape(bodies, newLen+1, 3)
                     self._trailLen += 1
                     self._trailVis = [ ]
