@@ -62,6 +62,7 @@ Options
   Velocity Range:
 
   Frame Modes:
+  
      Add - Adds new markers with each frame step.  Produces something like Anime
            tentacle porn.  Who doesn't like anime tentacle porn.
 
