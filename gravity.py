@@ -54,14 +54,19 @@ class Gravity(object):
         self._masses += self._massRange[0]
 
         # Create colors and sizes body visuals
-        self._massToSizeFactor = 1.0 / 100.0
-        self._sizes = self._masses * self._massToSizeFactor
+        mSizer = numpy.vectorize(self.massToSize)
+        self._sizes = mSizer(self._masses)
         self._colors = numpy.random.rand(self._bodyCount, 3)
 
         # Set centroid mass
 #        self._positions[0]  *= 0.0
 #        self._velocities[0] *= 0.0
-        
+
+    def massToSize(self, mass):
+        """Mass marker size kept in range from 10 -  60"""
+        mMin, mMax = self._massRange
+        return 10.0 + (mass-mMin) / ((mMax-mMin) / 50.0)
+    
     def positionRange(self):
         return self._posRange
     
