@@ -10,7 +10,6 @@ from guts_ctrlr import GutsController
 from PyQt6.QtCore import Qt
 from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import (QApplication,
-                             QMainWindow,
                              QVBoxLayout,
                              QWidget)
 
@@ -18,7 +17,7 @@ from vispy import app as vispyApp
 from vispy import scene as vispyScene
 
 
-class GutsMainWin(QMainWindow):
+class GutsMainWin(QWidget):
 
     def __init__(self, parent=None, flags=None):
         super().__init__(parent)
@@ -34,11 +33,10 @@ class GutsMainWin(QMainWindow):
         self._vpView.camera = vispyScene.cameras.ArcballCamera(fov=0)
         self._vpView.camera.scale_factor = 500
 
-        widget = QWidget()
-        widget.setLayout(QVBoxLayout())
-        widget.layout().addWidget(self._vpCanvas.native)
-
-        self.setCentralWidget(widget)
+        vbox = QVBoxLayout()
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.addWidget(self._vpCanvas.native)
+        self.setLayout(vbox)
 
     def vispyApp(self):
         return self._vispyApp

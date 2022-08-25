@@ -28,7 +28,6 @@ class GutsController(object):
         self._t2Marker = None
         
     def actionAddMarker(self):
-        print("actionAddMarker")
         newPos   = numpy.random.normal(size=(1, 3), loc=0, scale=100)
         newSize  = numpy.random.rand(1, 1) * 100 + 10
         newColor = numpy.random.rand(1, 3)
@@ -209,17 +208,13 @@ class GutsController(object):
                         
                     
     def bodyCountChanged(self, value):
-        print(f"bodyCountChanged: {value}")
         self._gravity.setBodyCount(value)
         
     def frameModeChanged(self, value):
-        print(f"frameModeChanged: {value}")
-        print(self._optionsUI.sender())
         self._frameMode = self._optionsUI.sender().currentText()
         
     def frameRateChanged(self, value):
         text = self._optionsUI.sender().currentText()
-        print(f"frameRateChanged: {value} {text}")
         rates = [1.0, 0.5, 0.25, 0.125, 0.0625, "auto"]
         self._frameRate = rates[value]
 
@@ -264,7 +259,7 @@ class GutsController(object):
     def clearScene(self):
         viewKids = self._vpView.children
         subSceneKids = viewKids[0].children
-        print(f"subSceneKids = {subSceneKids}")
+        #print(f"subSceneKids = {subSceneKids}")
         for mdx, obj in enumerate(subSceneKids):
             if mdx > 1:
                 subSceneKids[mdx].parent = None
