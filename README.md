@@ -67,9 +67,6 @@ Options
 
   Frame Modes:
   
-     Add - Adds new markers with each frame step.  Produces something like Anime
-           tentacle porn.  Who doesn't like anime tentacle porn.
-
      Move - Each body marker is moved with each frame step.  Produces speres 
             zooming around in space.
 
@@ -77,6 +74,12 @@ Options
 
      Trails - Like Move, but adds body path trails, up to a maximum length, for
               each body.  Produces multicolored sperghetti.
+
+     Add - Adds new markers with each frame step.  Produces something like
+           Anime tentacle porn.  Who doesn't like anime tentacle porn.
+
+     Merge - Like Move, but body collisions merge masses.
+
 
   Frame Rate:
      Change the animation speed.  Choose the number of animation frames to try

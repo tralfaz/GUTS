@@ -14,7 +14,7 @@ class GutsController(object):
 
         self._gravity = None
 
-        self._frameMode = "Add"
+        self._frameMode = "Move"
         self._frameRate = 0.25
         
         self._firstMarkers = None
@@ -122,6 +122,9 @@ class GutsController(object):
             self._vpAppTimer = vispyApp.Timer(self._frameRate, start=False)
             self._vpAppTimer.connect(self._vpAppTimerCB)
 
+        if self._frameMode == "Merge":
+            self._gravity.detectCollisions(True)
+
         if self._vpAppTimer:
             self._vpAppTimer.start()
             self._running =True
@@ -136,8 +139,8 @@ class GutsController(object):
                 self._optionsUI.setRunning(self._running)
              
     def advanceOneFrame(self, mode="add"):
-        self._gravity.jumpOneSecond()
-
+        coll = self._gravity.jumpOneSecond()
+        
         newPos = self._gravity.bodyPositions()
         bodySizes = self._gravity.bodySizes()
         bodyColors = self._gravity.bodyColors()
@@ -158,7 +161,12 @@ class GutsController(object):
                 if len(subSceneKids) > 2:
                     subSceneKids[2].parent = None
 
-        elif mode in ("Move", "Radii", "Trails") and self._firstMarkers:
+        elif mode != "Add" and self._firstMarkers:
+            if coll:
+                self._gravity.mergeBodies(coll[0], coll[1])
+                self._makeBodyMarkers()
+                self._gravity.detectCollisions(mode == "Merge")
+                
             self._firstMarkers.set_data(pos=newPos, size=bodySizes,
                                         edge_width=0.0,
                                         edge_width_rel=None,
@@ -299,6 +307,23 @@ class GutsController(object):
 
     def velocityRange(self):
         return self._gravity.velocityRange()
+
+
+    def _makeBodyMarkers(self):
+        if self._firstMarkers:
+            self._firstMarkers.parent = None
+
+        bodyPoses = self._gravity.bodyPositions()
+        newVis = vispyScene.visuals.Markers(pos=bodyPoses,
+                                size=self._gravity.bodySizes(),
+                                antialias=0,
+                                face_color=self._gravity.bodyColors(),
+                                edge_color='white',
+                                edge_width=0,
+                                scaling=True,
+                                spherical=True,
+                                parent=self._vpView.scene)
+        self._firstMarkers = newVis
 
     def _vpAppTimerCB(self, event):
         #print(f"Timer: blocked={event.blocked}, count={event.count} dt={event.dt}")
