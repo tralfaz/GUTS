@@ -111,7 +111,7 @@ the following:
   Update pip utility:
      pip3 install --upgrade pip
 
-  vispy:
+  numpy:
      pip3 install numpy
 
   PyQt6:
