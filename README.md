@@ -100,6 +100,9 @@ Python:
 Using the pip3 utility provided with your python installation, install
 the following:
 
+  Update pip utility:
+     pip3 install --upgrade pip
+
   vispy:
      pip3 install numpy
 
