@@ -23,8 +23,10 @@ class GutsController(object):
         
         self._running = False
         self._sceneOrigin = numpy.array([0.0, 0.0, 0.0])
+
         self._trailMax = 1000
         self._trailVis = None
+
         self._t2Marker = None
         
     def actionAddMarker(self):
@@ -80,19 +82,10 @@ class GutsController(object):
         self._trailVis = None
 
         self._gravity.createRandomBodies()
-        self._gravity.printState()
+        #self._gravity.printState()
 
         bodyPoses = self._gravity.bodyPositions()
-        newVis = vispyScene.visuals.Markers(pos=bodyPoses,
-                                size=self._gravity.bodySizes(),
-                                antialias=0,
-                                face_color=self._gravity.bodyColors(),
-                                edge_color='white',
-                                edge_width=0,
-                                scaling=True,
-                                spherical=True)
-        newVis.parent = self._vpView.scene
-        self._firstMarkers = newVis
+        self._makeBodyMarkers()
 
         if self._frameMode == "Radii":
             self._radiiVis = [ ]
@@ -108,7 +101,9 @@ class GutsController(object):
             self._trails = numpy.array(self._gravity.bodyPositions())
         
         self._optionsUI.setRunning(False)
-        
+
+        self._mainWin.setWindowTitle("GUTS - %s(%s)" %
+                                     (self._frameMode, bodyPoses.shape[0]))
     def actionQuit(self):
         if self._vpApp:
             self._vpApp.quit()
@@ -165,6 +160,8 @@ class GutsController(object):
             if coll:
                 self._gravity.mergeBodies(coll[0], coll[1])
                 self._makeBodyMarkers()
+                title = f"Mass {coll[0]} collided with mass {coll[1]}"
+                self._mainWin.setWindowTitle(title)
                 self._gravity.detectCollisions(mode == "Merge")
                 
             self._firstMarkers.set_data(pos=newPos, size=bodySizes,
@@ -213,11 +210,13 @@ class GutsController(object):
                     # update the trail points of each trail
                     for tvx, trailVis in enumerate(self._trailVis):
                         trailVis.set_data(pos=self._trails[tvx])
-                        
                     
     def bodyCountChanged(self, value):
         self._gravity.setBodyCount(value)
         
+    def collDistChanged(self, value):
+        self._gravity.setCollisiionDistance(value)
+ 
     def frameModeChanged(self, value):
         self._frameMode = self._optionsUI.sender().currentText()
         
@@ -262,7 +261,7 @@ class GutsController(object):
             print(self._t2Marker)
 #            self._t2Marker.set_data(pos=numpy.array([[100.0, 100.0, 100.0], [0.s0, 0.0, 0.0]]))
             self._t2Marker.set_data(pos=numpy.array([[0.0, 0.0, 0.0]]), size=40.0)
-            #            set_data(pos=None, size=10.0, edge_width=1.0, edge_width_rel=None, edge_color='black', face_color='white', symbol='o')
+            #set_data(pos=None, size=10.0, edge_width=1.0, edge_width_rel=None, edge_color='black', face_color='white', symbol='o')
 
     def clearScene(self):
         viewKids = self._vpView.children
@@ -271,6 +270,9 @@ class GutsController(object):
         for mdx, obj in enumerate(subSceneKids):
             if mdx > 1:
                 subSceneKids[mdx].parent = None
+
+    def collisionDistance(self):
+        return self._gravity.collisionDistance()
 
     def massRange(self):
         return self._gravity.massRange()

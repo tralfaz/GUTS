@@ -49,9 +49,6 @@ class GutsMainWin(QWidget):
 
 
 if __name__ == "__main__":
-    print(dir(vispyApp))
-    print(dir(vispyApp.canvas))
-
     app = QApplication([])
     
     mainWin = GutsMainWin()

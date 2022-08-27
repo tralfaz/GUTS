@@ -89,10 +89,15 @@ class OptionsView(QDialog):
         wgt.clicked.connect(self._optCtrlr.ActionTest1)
         self._test1BTN = wgt
 
-        wgt = QPushButton("Test 2")
+#        wgt = QPushButton("Test 2")
+#        actslo.addWidget(wgt)
+#        wgt.clicked.connect(self._optCtrlr.ActionTest2)
+#        self._test2BTN = wgt
+
+        wgt = QPushButton("Save Options")
         actslo.addWidget(wgt)
         wgt.clicked.connect(self._optCtrlr.ActionTest2)
-        self._test2BTN = wgt
+#        self._test2BTN = wgt
 
         quitBTN = QPushButton("Quit")
         actslo.addWidget(quitBTN)
@@ -156,7 +161,6 @@ class OptionsView(QDialog):
 
         # Position XYZ Random Range
         posRange = ctlr.positionRange()
-        print(f"PosRange: {posRange}")
         posMinLBL = QLabel("Position Range: min ")
         self._posMinLE  = QLineEdit()
         self._posMinLE.setText(f"{posRange[0]}")
@@ -235,6 +239,20 @@ class OptionsView(QDialog):
         hbox = QHBoxLayout()
         hbox.addWidget(trailLenLBL)
         hbox.addWidget(trailLenSBX)
+        pvbox.addLayout(hbox)
+
+        colDistLBL = QLabel()
+        colDistLBL.setText("Collision Distance:")
+
+        colDistSBX = QSpinBox()
+        colDistSBX.setRange(1, 15)
+        colDistSBX.setValue(int(ctlr.collisionDistance()))
+        colDistSBX.setSingleStep(1)
+        colDistSBX.valueChanged.connect(ctlr.collDistChanged)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(colDistLBL)
+        hbox.addWidget(colDistSBX)
         pvbox.addLayout(hbox)
 
     def _massMaxChangeDone(self):

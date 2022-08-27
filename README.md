@@ -73,7 +73,7 @@ Options
      Radii - Like Move but with lines from each body to the scene origin.
 
      Trails - Like Move, but adds body path trails, up to a maximum length, for
-              each body.  Produces multicolored sperghetti.
+              each body.  Produces multicolored spaghetti.
 
      Add - Adds new markers with each frame step.  Produces something like
            Anime tentacle porn.  Who doesn't like anime tentacle porn.
@@ -89,6 +89,9 @@ Options
   Trail Length:
      Set maximum trail length when in Add or Trails mode.  The value of Trail
      Length can be much larger in Trails mode then in Add mode.
+
+  Collision Distance:
+     Distance between to body centers to be produce a mass merge.
 
 
 Required Runtime Environment

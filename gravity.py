@@ -39,6 +39,9 @@ class Gravity(object):
     def bodySizes(self):
         return self._sizes
     
+    def collisionDistance(self):
+        return self._collisionDist
+
     def createRandomBodies(self):
         self._massForces = None
         
@@ -153,7 +156,10 @@ class Gravity(object):
         
     def positionRange(self):
         return self._posRange
-    
+
+    def setCollisiionDistance(self, dist):
+        self._collisionDist = float(dist)
+
     def setBodyCount(self, count):
         self._bodyCount = count
 
@@ -217,16 +223,11 @@ class Gravity(object):
 
             # if collision detection enabled, check distances
             if detectCollision:
-#                cds = numpy.where(m21Dists < self._collisionDist)
                 cds = numpy.where(m21Dists < self._collisionDist)
                 if cds[0].shape[0] > 0:
-                    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-                    print(f"COLLIDE: {bdx} {cds[0]}")
                     cdx = cds[0][0]
                     if cdx >= bdx:
                         cdx += 1
-                    print(f"COLLIDE: Indexes {bdx} {cdx}")
-                    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
                     self._collisionIndexes = bdx, cdx
                     detectCollision = False
 
