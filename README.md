@@ -91,7 +91,7 @@ Options
      Length can be much larger in Trails mode then in Add mode.
 
   Collision Distance:
-     Distance between to body centers to be produce a mass merge.
+     Distance between two body centers to be produce a mass merge.
 
 
 Required Runtime Environment
@@ -99,6 +99,11 @@ Required Runtime Environment
 Python:
    Begin by installing Python 3.10.  Download the appropriate release for your
    O/S from https://www.python.org/downloads/
+
+Clone project with:
+   git clone https://github.com/tralfaz/GUTS
+
+Or download zip from the github page Code button.
 
 Using the pip3 utility provided with your python installation, install
 the following:
