@@ -1,4 +1,4 @@
-from gravity import G as Gconst
+import gravity
 
 from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import (QMainWindow,
@@ -42,6 +42,10 @@ class OptionsView(QDialog):
 
         self.setLayout(self._dlgLayout)
 
+    def applyOptions(self, opts):
+        if opts.get("trailMax"):
+            self._trailLenSBX.setValue(opts.get("trailMax", 1000))
+
     def setRunning(self, running):
         self._newSimBTN.setEnabled(not running)
         self._startBTN.setEnabled(not running)
@@ -84,20 +88,20 @@ class OptionsView(QDialog):
         wgt.clicked.connect(self._optCtrlr.actionDeleteOldestMarker)
         self._delBTN = wgt
         
-        wgt = QPushButton("Test 1")
+        wgt = QPushButton("Test")
         actslo.addWidget(wgt)
-        wgt.clicked.connect(self._optCtrlr.ActionTest1)
+        wgt.clicked.connect(self._optCtrlr._test3)
         self._test1BTN = wgt
 
-#        wgt = QPushButton("Test 2")
-#        actslo.addWidget(wgt)
-#        wgt.clicked.connect(self._optCtrlr.ActionTest2)
-#        self._test2BTN = wgt
-
-        wgt = QPushButton("Save Options")
+        wgt = QPushButton("Spin Off")
         actslo.addWidget(wgt)
-        wgt.clicked.connect(self._optCtrlr.ActionTest2)
-#        self._test2BTN = wgt
+        wgt.clicked.connect(self._optCtrlr.actionSpinSwitch)
+        self._spinSwitchBTN = wgt
+
+#        wgt = QPushButton("Save Options")
+#        actslo.addWidget(wgt)
+#        wgt.clicked.connect(self._optCtrlr.actionSaveOptions)
+#        self._saveOptionsBTN = wgt
 
         quitBTN = QPushButton("Quit")
         actslo.addWidget(quitBTN)
@@ -122,19 +126,20 @@ class OptionsView(QDialog):
         bodiesSBX.setValue(3)
         bodiesSBX.valueChanged.connect(ctlr.bodyCountChanged)
 
-        bodiesHbox = QHBoxLayout()
-        bodiesHbox.addWidget(bodiesLBL)
-        bodiesHbox.addWidget(bodiesSBX)
-        pvbox.addLayout(bodiesHbox)
+        hbox = QHBoxLayout()
+        hbox.addWidget(bodiesLBL)
+        hbox.addWidget(bodiesSBX)
+        pvbox.addLayout(hbox)
 
         gravLBL = QLabel()
         gravLBL.setText("Gravity: ")
         
         gravSBX = QDoubleSpinBox()
         gravSBX.setDecimals(15)
-        gravSBX.setValue(Gconst)
-        gravSBX.setSingleStep(Gconst)
-
+        gravSBX.setValue(ctlr.gravityConst())
+        gravSBX.setSingleStep(gravity.G)
+        gravSBX.valueChanged.connect(ctlr.gravityConstChanged)
+        
         gravHbox = QHBoxLayout()
         gravHbox.addWidget(gravLBL)
         gravHbox.addWidget(gravSBX)
@@ -220,25 +225,40 @@ class OptionsView(QDialog):
                             "16/sec", "auto"])
         wgt.setCurrentIndex(2)
         wgt.currentIndexChanged.connect(ctlr.frameRateChanged)
-        self._frameRateeCOMBO = wgt
+        self._frameRateCOMBO = wgt
 
         hbox = QHBoxLayout()
         hbox.addWidget(frameRateLBL)
         hbox.addWidget(wgt)
         pvbox.addLayout(hbox)
 
+        # Spin Mode
+        lbl = QLabel()
+        lbl.setText("Spin Mode:")
+
+        wgt = QComboBox()
+        wgt.insertItems(0, ["X", "Y", "Z", "XY", "XZ", "YZ", "XYZ"])
+        wgt.setCurrentIndex(0)
+        wgt.currentIndexChanged.connect(ctlr.spinModeChanged)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(lbl)
+        hbox.addWidget(wgt)
+        pvbox.addLayout(hbox)
+
         trailLenLBL = QLabel()
         trailLenLBL.setText("Trail Length:")
 
-        trailLenSBX = QSpinBox()
-        trailLenSBX.setRange(1, 10000)
-        trailLenSBX.setValue(1000)
-        trailLenSBX.setSingleStep(100)
-        trailLenSBX.valueChanged.connect(ctlr.trailLengthChanged)
-
+        wgt = QSpinBox()
+        wgt.setRange(1, 10000)
+        wgt.setValue(1000)
+        wgt.setSingleStep(100)
+        wgt.valueChanged.connect(ctlr.trailLengthChanged)
+        self._trailLenSBX = wgt
+        
         hbox = QHBoxLayout()
         hbox.addWidget(trailLenLBL)
-        hbox.addWidget(trailLenSBX)
+        hbox.addWidget(self._trailLenSBX)
         pvbox.addLayout(hbox)
 
         colDistLBL = QLabel()

@@ -1,8 +1,13 @@
+import math
+
 import gravity
+import optstore
 
 import numpy
 from vispy import app   as vispyApp
 from vispy import scene as vispyScene
+from vispy.util.quaternion import Quaternion
+
 
 class GutsController(object):
 
@@ -14,18 +19,34 @@ class GutsController(object):
 
         self._gravity = None
 
+        self._spinSwitch  = "Spin Off"
+        self._spinAngles  = numpy.array([0.0, 0.0, 0.0])
+        self._spinModes   = { "X"   : numpy.array([0.5, 0.0, 0.0]),
+                              "Y"   : numpy.array([0.0, 0.5, 0.0]),
+                              "Z"   : numpy.array([0.0, 0.0, 0.5]),
+                              "XY"  : numpy.array([0.5, 0.5, 0.0]),
+                              "XZ"  : numpy.array([0.5, 0.0, 0.5]),
+                              "YZ"  : numpy.array([0.0, 0.5, 0.5]),
+                              "XYZ" : numpy.array([0.5, 0.5, 0.5]) }
+        self._spinDeltas  = self._spinModes["X"]
+        self._spinTimer = None
+        
         self._frameMode = "Move"
         self._frameRate = 0.25
         
         self._firstMarkers = None
 
+        self._optStore = optstore.OptionsStore()
+
         self._optionsUI = None
         
         self._running = False
+
         self._sceneOrigin = numpy.array([0.0, 0.0, 0.0])
 
-        self._trailMax = 1000
-        self._trailVis = None
+        self._bodyCount = 3
+        self._trailMax  = 1000
+        self._trailVis  = None
 
         self._t2Marker = None
         
@@ -58,23 +79,14 @@ class GutsController(object):
             subSceneKids[mdx].parent = None
 
     def actionJumpOneSecond(self):
-        self._gravity.jumpOneSecond()
-#        self._gravity.printState()
-        newVis = vispyScene.visuals.Markers(pos=self._gravity.bodyPositions(),
-                                       size=self._gravity.bodySizes(),
-                                       antialias=0,
-                                       face_color=self._gravity.bodyColors(),
-                                       edge_color='white',
-                                       edge_width=0,
-                                       scaling=True,
-                                       spherical=True)
-        newVis.parent = self._vpView.scene
+        self.advanceOneFrame(self._frameMode)
 
     def actionNewSimulation(self):
         if self._running:
             return
          
         self.clearScene()
+        self._gravity.setBodyCount(self._bodyCount)
         self._radiiVis = None
 
         self._trails = None
@@ -108,6 +120,23 @@ class GutsController(object):
         if self._vpApp:
             self._vpApp.quit()
 
+    def actionSaveOptions(self):
+        print("Save Options")
+
+    def actionSpinSwitch(self):
+        if not self._spinTimer:
+            self._spinTimer = vispyApp.Timer(0.1, start=False)
+            self._spinTimer.connect(self._spinTimerCB)
+
+        spinBTN = self._optionsUI.sender()
+        btntxt = spinBTN.text()
+        if btntxt == "Spin On":
+            self._spinTimer.stop()
+            spinBTN.setText("Spin Off")
+        else:
+            self._spinTimer.start()
+            spinBTN.setText("Spin On")
+        
     def actionStartSimulation(self):
         if not self._vpAppTimer:
             self._vpAppTimer = vispyApp.Timer(self._frameRate, start=False)
@@ -160,7 +189,8 @@ class GutsController(object):
             if coll:
                 self._gravity.mergeBodies(coll[0], coll[1])
                 self._makeBodyMarkers()
-                title = f"Mass {coll[0]} collided with mass {coll[1]}"
+                title = f"GUTS - Merge({self._gravity.bodyCount()}) :"
+                title = f"{title} Mass {coll[0]} collided with mass {coll[1]}"
                 self._mainWin.setWindowTitle(title)
                 self._gravity.detectCollisions(mode == "Merge")
                 
@@ -210,14 +240,35 @@ class GutsController(object):
                     # update the trail points of each trail
                     for tvx, trailVis in enumerate(self._trailVis):
                         trailVis.set_data(pos=self._trails[tvx])
+
+    def applyOptions(self, opts):
+        self._optionsUI.applyOptions(opts)
                     
     def bodyCountChanged(self, value):
+        self._bodyCount = value
         self._gravity.setBodyCount(value)
-        
+
+    def clearScene(self):
+        viewKids = self._vpView.children
+        subSceneKids = viewKids[0].children
+        print(f"subSceneKids = {subSceneKids}")
+        for mdx, obj in enumerate(subSceneKids):
+            if mdx > 1:
+                subSceneKids[mdx].parent = None
+
     def collDistChanged(self, value):
         self._gravity.setCollisiionDistance(value)
- 
+
+    def collisionDistance(self):
+        return self._gravity.collisionDistance()
+
     def frameModeChanged(self, value):
+        gravOpts = self._gravity.options()
+        gravOpts.update({
+            "frameRate" : self._frameRate,
+            "trailMax"  : self._trailMax,
+            "collDist"  : self.collisionDistance() })
+        self._optStore.updateOptions(self._frameMode, gravOpts)
         self._frameMode = self._optionsUI.sender().currentText()
         
     def frameRateChanged(self, value):
@@ -225,54 +276,11 @@ class GutsController(object):
         rates = [1.0, 0.5, 0.25, 0.125, 0.0625, "auto"]
         self._frameRate = rates[value]
 
-    def ActionTest1(self):
-        print(f"ActionTest1")
-        viewKids = self._vpView.children
-        print(f"VIEW:  .children {viewKids}")
-        subSceneKids = viewKids[0].children
-        print(f"VIEW:  .children.children {viewKids[0].children}")
-        if len(subSceneKids) > 2:
-            print(f"Markers: {subSceneKids[2].children}")
-            print(f"VIEW.scene.children: {self._vpView.scene.children}")
-            print(f"VIEW.scene.children[2].children: {self._vpView.scene.children[2].children}")
-            print(f"MARKERS.pos: {dir(subSceneKids[2])}")
-        #    markers = obj
+    def gravityConst(self):
+        return self._gravity.gravitation()
 
-        bodyPoses = self._gravity.bodyPositions()
-#        linePos = numpy.array([ [-30.0, -30.0, -30.0], [30.0, 30.0, 30.0] ])
-#        axisPos = numpy.array([ [-30.0, 0.0, 0.0], [30.0, 0.0, 0.0],
-#                                [0.0, -30.0, 0.0], [0.0, 30.0, 0.0],
-#                                [0.0, 0.0, -30.0], [0.0, 0.0, 30.0] ])
-#        line = vispyScene.visuals.Line(pos=axisPos, color=(1.0, 1.0, 0.0),
-#                          parent=self._vpView.scene, width=4.0, method="gl",
-#                          antialias=True)
-        origin = numpy.array([0.0, 0.0, 0.0])
-        self._radiiVis = [ ]
-        for pos in bodyPoses:
-            radii = numpy.array([origin, pos])
-            line = vispyScene.visuals.Line(pos=radii, color=(1.0, 1.0, 0.0),
-                                           parent=self._vpView.scene, width=0.5, method="gl",
-                                           antialias=True)
-            self._radiiVis.append(line)
-
-
-    def ActionTest2(self):
-        if self._t2Marker:
-            print(self._t2Marker)
-#            self._t2Marker.set_data(pos=numpy.array([[100.0, 100.0, 100.0], [0.s0, 0.0, 0.0]]))
-            self._t2Marker.set_data(pos=numpy.array([[0.0, 0.0, 0.0]]), size=40.0)
-            #set_data(pos=None, size=10.0, edge_width=1.0, edge_width_rel=None, edge_color='black', face_color='white', symbol='o')
-
-    def clearScene(self):
-        viewKids = self._vpView.children
-        subSceneKids = viewKids[0].children
-        #print(f"subSceneKids = {subSceneKids}")
-        for mdx, obj in enumerate(subSceneKids):
-            if mdx > 1:
-                subSceneKids[mdx].parent = None
-
-    def collisionDistance(self):
-        return self._gravity.collisionDistance()
+    def gravityConstChanged(self, value):
+        self._gravity.setGravitation(value)
 
     def massRange(self):
         return self._gravity.massRange()
@@ -304,6 +312,10 @@ class GutsController(object):
     def setUIView(self, uiView):
         self._optionsUI = uiView
         
+    def spinModeChanged(self, value):
+        spinMode = self._optionsUI.sender().currentText()
+        self._spinDeltas = self._spinModes[spinMode]
+
     def trailLengthChanged(self, value):
         self._trailMax = value
 
@@ -331,3 +343,71 @@ class GutsController(object):
         #print(f"Timer: blocked={event.blocked}, count={event.count} dt={event.dt}")
         #'elapsed', 'handled', 'iteration', 'native', 'source', 'sources', 'type'
         self.advanceOneFrame(self._frameMode)
+
+    def _spinTimerCB(self, event):
+#        print(f"_spinTimerCB: SA={self._spinAngles}")
+        sa = self._spinAngles + self._spinDeltas
+        sa %= 360.0
+                                                      # roll,  pitch, yaw
+#        viewAngle = Quaternion.create_from_euler_angles(sa[2], sa[0], sa[1], True)
+        viewAngle =  Quaternion.create_from_euler_angles(sa[2], sa[1],
+                                                         sa[0], True)
+        self._vpView.camera.set_state({ "_quaternion": viewAngle })
+        self._vpView.camera.view_changed()
+        self._spinAngles = sa
+
+    def _test1(self):
+        print(f"ActionTest1")
+        viewKids = self._vpView.children
+        print(f"VIEW:  .children {viewKids}")
+        subSceneKids = viewKids[0].children
+        print(f"VIEW:  .children.children {viewKids[0].children}")
+        if len(subSceneKids) > 2:
+            print(f"Markers: {subSceneKids[2].children}")
+            print(f"VIEW.scene.children: {self._vpView.scene.children}")
+            print(f"VIEW.scene.children[2].children: {self._vpView.scene.children[2].children}")
+            print(f"MARKERS.pos: {dir(subSceneKids[2])}")
+        #    markers = obj
+
+        bodyPoses = self._gravity.bodyPositions()
+#        linePos = numpy.array([ [-30.0, -30.0, -30.0], [30.0, 30.0, 30.0] ])
+#        axisPos = numpy.array([ [-30.0, 0.0, 0.0], [30.0, 0.0, 0.0],
+#                                [0.0, -30.0, 0.0], [0.0, 30.0, 0.0],
+#                                [0.0, 0.0, -30.0], [0.0, 0.0, 30.0] ])
+#        line = vispyScene.visuals.Line(pos=axisPos, color=(1.0, 1.0, 0.0),
+#                          parent=self._vpView.scene, width=4.0, method="gl",
+#                          antialias=True)
+        origin = numpy.array([0.0, 0.0, 0.0])
+        self._radiiVis = [ ]
+        for pos in bodyPoses:
+            radii = numpy.array([origin, pos])
+            line = vispyScene.visuals.Line(pos=radii, color=(1.0, 1.0, 0.0),
+                                           parent=self._vpView.scene, width=0.5, method="gl",
+                                           antialias=True)
+            self._radiiVis.append(line)
+
+
+    def _test2(self):
+        if self._t2Marker:
+            print(self._t2Marker)
+#            self._t2Marker.set_data(pos=numpy.array([[100.0, 100.0, 100.0], [0.s0, 0.0, 0.0]]))
+            self._t2Marker.set_data(pos=numpy.array([[0.0, 0.0, 0.0]]), size=40.0)
+            #set_data(pos=None, size=10.0, edge_width=1.0, edge_width_rel=None, edge_color='black', face_color='white', symbol='o')
+
+    def _test3(self):
+        print("TEST 3: ")
+        props = self._vpView.camera.get_state()
+        print(props)
+        print(props["_quaternion"], id(props["_quaternion"]))
+        newProps = { "_quaternion": Quaternion(1, 0, 0, 0.5) }
+        print("self._vpView.transform", self._vpView.transform)
+        print("self._vpView.camera.transform", self._vpView.camera.transform)
+        print("self._vpView.camera.transform.matrix", self._vpView.camera.transform.matrix)
+#        self._vpView.camera.set_state(newProps)
+#        self._vpView.camera.view_changed()
+#You should be able to call `app.process_events()` to force an update.
+        return
+        mtxrot.rotate(0.2 ** 0.5, (1, 0, 0))
+        mtxrot.rotate(0.3 ** 0.5, (0, 1, 0))
+        mtxrot.rotate(0.5 ** 0.5, (0, 0, 1))
+        self._vpView.update()

@@ -3,13 +3,15 @@ import math
 import numpy
 
 # Gravitation Constant
-G = 2.0 * 6.672e-4  # N * m^2 / kg^2
+G = 6.672e-11    # N * m^2 / kg^2
 
 
 class Gravity(object):
 
     def __init__(self):
         super().__init__()
+
+        self._G = G * 2.0e7  # Increase gravity by a huge amount
 
         self._bodyCount = 0
 
@@ -72,12 +74,8 @@ class Gravity(object):
     def detectCollisions(self, value):
         self._collisionDetect = value
 
-    def printState(self):
-        print(f"TIME = {self._time}")
-        print(f"POSITIONS:\n", self._positions)
-        print(f"VELOCITIES: {self._velocities}")
-        print(f"MASSES: {self._masses}")
-        print(f"FORCES: {self._massForces}")
+    def gravitation(self):
+        return self._G
 
     def jumpOneSecond(self):
         """Sum 3D forces on mass bodies, then update each body position and
@@ -154,6 +152,24 @@ class Gravity(object):
         self._positions = numpy.delete(self._positions, delIndex, axis=0)
         self._bodyCount -= 1
         
+    def printState(self):
+        print(f"TIME = {self._time}")
+        print(f"POSITIONS:\n", self._positions)
+        print(f"VELOCITIES: {self._velocities}")
+        print(f"MASSES: {self._masses}")
+        print(f"FORCES: {self._massForces}")
+
+    def options(self):
+        """Return all gravity options in a dict"""
+        return {
+            "bodies"            : self._bodyCount,
+            "G"                 : self._G,
+            "massRange"         : self._massRange,
+            "positionRange"     : self._posRange,
+            "velocityRange"     : self._velRange,
+            "collisionDistance" : self._collisionDist
+            }
+
     def positionRange(self):
         return self._posRange
 
@@ -163,8 +179,26 @@ class Gravity(object):
     def setBodyCount(self, count):
         self._bodyCount = count
 
+    def setGravitation(self, grav):
+        self._G = grav
+
     def setMassRange(self, massMin, massMax):
         self._massRange = (massMin, massMax)
+
+    def setOptions(self, gravOpts):
+        """Assign gravity option from supplied dict"""
+        val = gravOpts.get("bodies")
+        self._bodyCount = val if val is not None else 3
+        val = gravOpts.get("G")
+        self._G = val if val is not None else G * 2.0e7 
+        val = gravOpts.get("massRange")
+        self._massRange = val if val is not None else (4500.0, 5000.0)
+        val = gravOpts.get("positionRange")
+        self._posRange = val if val is not None else (-200.0, 200.0)
+        val = gravOpts.get("velocityRange")
+        self._velRange = val if val is not None else (-0.2, 0.2)
+        val = gravOpts.get("collisionDistance")
+        self._collisionDist = val if val is not None else 5.0
 
     def setPositionRange(self, posMin, posMax):
         self._posRange = (posMin, posMax)
@@ -245,7 +279,7 @@ class Gravity(object):
 
             # Multiply force sums by gravitational constants to get
             # forces in Newtons
-            m2GravVec = m2fsum * -G
+            m2GravVec = m2fsum * -self._G
             #print(f"m2GravVec = {m2GravVec}")
             self._massForces = numpy.append(self._massForces, m2GravVec)
             # for qdx

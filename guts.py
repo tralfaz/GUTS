@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (QApplication,
 
 from vispy import app as vispyApp
 from vispy import scene as vispyScene
-
+from vispy.visuals.transforms import MatrixTransform
 
 class GutsMainWin(QWidget):
 
@@ -28,10 +28,13 @@ class GutsMainWin(QWidget):
                                                 size=(600, 600),
                                                 show=True)
         self._vpView = self._vpCanvas.central_widget.add_view()
-
+        print("VIEW:", self._vpView)
+       
         # Add Camera view manipulator
         self._vpView.camera = vispyScene.cameras.ArcballCamera(fov=0)
         self._vpView.camera.scale_factor = 500
+
+#        self._vpView.camera.rotation = MatrixTransform()
 
         vbox = QVBoxLayout()
         vbox.setContentsMargins(0, 0, 0, 0)
