@@ -207,7 +207,7 @@ class OptionsView(QDialog):
         frameModeLBL.setText("Frame Mode: ")
 
         wgt = QComboBox()
-        wgt.insertItems(0, ["Move", "Radii", "Trails", "Add", "Merge"])
+        wgt.insertItems(0, ["Move","Radii","Trails","Tubular","Add","Merge"])
         wgt.currentIndexChanged.connect(ctlr.frameModeChanged)
         self._frameModeCOMBO = wgt
 

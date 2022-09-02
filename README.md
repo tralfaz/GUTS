@@ -72,8 +72,10 @@ Options
 
      Radii - Like Move but with lines from each body to the scene origin.
 
-     Trails - Like Move, but adds body path trails, up to a maximum length, for
-              each body.  Produces multicolored spaghetti.
+     Trails - Like Move, but adds body path trails, up to a maximum length,
+              for each body.  Produces multicolored spaghetti.
+
+     Tubular - Like Trails but body trails are made of translucent tubes.
 
      Add - Adds new markers with each frame step.  Produces something like
            Anime tentacle porn.  Who doesn't like anime tentacle porn.
@@ -123,3 +125,7 @@ the following:
 
   Run the guts app:
      python3 guts.py
+
+Windows Notes:
+  If you installed python at C:\opt\python the pip3 utility will be found at
+  C:\opt\python\Scripts\pip3.exe

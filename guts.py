@@ -28,7 +28,6 @@ class GutsMainWin(QWidget):
                                                 size=(600, 600),
                                                 show=True)
         self._vpView = self._vpCanvas.central_widget.add_view()
-        print("VIEW:", self._vpView)
        
         # Add Camera view manipulator
         self._vpView.camera = vispyScene.cameras.ArcballCamera(fov=0)
