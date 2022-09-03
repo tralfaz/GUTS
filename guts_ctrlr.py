@@ -92,7 +92,9 @@ class GutsController(object):
         self._trails = None
         self._trailLen = 0
         self._trailVis = None
-
+        self._tubeColors = None
+        self._tubeSizes  = None
+        
         self._gravity.createRandomBodies()
         #self._gravity.printState()
 
@@ -301,34 +303,44 @@ class GutsController(object):
 
     def _extendTrails(self, mode, bodyPoses, bodyColors, bodySizes):
         bodyCount = bodyPoses.shape[0]
-        newLen = self._trailLen + 1
-        newTrails = self._trails.reshape(bodyCount, newLen*3)
-        newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
-        self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
-        self._trailLen += 1
-        if self._trailLen > self._trailMax:
-            # Delete first vertex of each trail vertex list
-            self._trails = numpy.delete(self._trails, 0, axis=1)
-            self._trailLen = self._trailMax
 
         # update the trail points of each trail
         if mode == "Trails":
+            # Extend line vertices up to a max length
+            newLen = self._trailLen + 1
+            newTrails = self._trails.reshape(bodyCount, newLen*3)
+            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
+            self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
+            self._trailLen += 1
+            if self._trailLen > self._trailMax:
+                # Delete first vertex of each trail vertex list
+                self._trails = numpy.delete(self._trails, 0, axis=1)
+                self._trailLen = self._trailMax
+
             for tvx, trailVis in enumerate(self._trailVis):
                 trailVis.set_data(pos=self._trails[tvx])
+
         elif mode == "Tubular":
+            # Need to create new visuals, then delete previous vis (for now)
+            newLen = self._trailLen + 1
+            newTrails = self._trails.reshape(bodyCount, newLen*3)
+            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
+            self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
+            self._trailLen += 1
+            if self._trailLen > self._trailMax:
+                # Delete first vertex of each trail vertex list
+                self._trails = numpy.delete(self._trails, 0, axis=1)
+                self._trailLen = self._trailMax
+
             newTrails = []
-            tubeSizes = bodySizes / 4.0
-            # Add alpha to colors
-            alpha = numpy.ones((len(self._trails), 1)) * 0.5
-            alphaColors = numpy.hstack( (bodyColors, alpha) )
             for tvx, trailVis in enumerate(self._trailVis):
                 newVis = vispyScene.visuals.Tube(points=self._trails[tvx],
-                                                 color=alphaColors[tvx],
-                                                 radius=tubeSizes[tvx],
+                                                 color=self._tubeColors[tvx],
+                                                 radius=self._tubeSizes[tvx],
                                                  parent=self._vpView.scene)
                 trailVis.parent = None
                 newTrails.append(newVis)
-                self._trailVis = newTrails
+            self._trailVis = newTrails
 
     def _makeBodyMarkers(self):
         if self._firstMarkers:
@@ -365,12 +377,14 @@ class GutsController(object):
                                                  parent=parentVis)
                 self._trailVis.append(newVis)
         elif mode == "Tubular":
-            # Add alpha to colors
-            alpha = numpy.ones((len(self._trails), 1)) * 0.5
-            alphaColors = numpy.hstack( (bodyColors, alpha) )
+            # Add alpha to colors for tube colors
+            alpha = numpy.ones((bodyCount, 1)) * 0.5
+            self._tubeColors = numpy.hstack( (bodyColors, alpha) )
+            self._tubeSizes  = bodySizes / 4.0
+            
             for tdx, endPoints in enumerate(self._trails):
                 newVis = vispyScene.visuals.Tube(points=endPoints,
-                                                 color=alphaColors[tdx],
+                                                 color=self._tubeColors[tdx],
                                                  radius=5.0,
                                                  parent=parentVis)
                 self._trailVis.append(newVis)
