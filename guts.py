@@ -33,8 +33,6 @@ class GutsMainWin(QWidget):
         self._vpView.camera = vispyScene.cameras.ArcballCamera(fov=0)
         self._vpView.camera.scale_factor = 500
 
-#        self._vpView.camera.rotation = MatrixTransform()
-
         vbox = QVBoxLayout()
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.addWidget(self._vpCanvas.native)

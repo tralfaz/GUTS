@@ -15,7 +15,6 @@ class GutsController(object):
         super().__init__()
 
         self._vpApp      = None
-        self._vpAppTimer = None
 
         self._gravity = None
 
@@ -40,6 +39,8 @@ class GutsController(object):
 
         self._optionsUI = None
         
+        self._vpAppTimer = vispyApp.Timer(self._frameRate, start=False)
+        self._vpAppTimer.connect(self._vpAppTimerCB)
         self._running = False
 
         self._sceneOrigin = numpy.array([0.0, 0.0, 0.0])
@@ -140,25 +141,15 @@ class GutsController(object):
             spinBTN.setText("Spin On")
         
     def actionStartSimulation(self):
-        if not self._vpAppTimer:
-            self._vpAppTimer = vispyApp.Timer(self._frameRate, start=False)
-            self._vpAppTimer.connect(self._vpAppTimerCB)
-        else:
-            self._vpAppTimer.disconnect()
-            self._vpAppTimer = vispyApp.Timer(self._frameRate, start=False)
-            self._vpAppTimer.connect(self._vpAppTimerCB)
-
         if self._frameMode == "Merge":
             self._gravity.detectCollisions(True)
-
-        if self._vpAppTimer:
-            self._vpAppTimer.start()
-            self._running =True
-            if self._optionsUI:
-                self._optionsUI.setRunning(self._running)
+        self._running = True
+        if self._optionsUI:
+            self._optionsUI.setRunning(self._running)
+        self._vpAppTimer.start()
             
     def actionStopSimulation(self):
-        if self._vpAppTimer and self._running:
+        if self._running:
             self._vpAppTimer.stop()
             self._running = False
             if self._optionsUI:
@@ -252,9 +243,11 @@ class GutsController(object):
         
     def frameRateChanged(self, value):
         text = self._optionsUI.sender().currentText()
-        rates = [1.0, 0.5, 0.25, 0.125, 0.0625, "auto"]
+        rates = [1.0, 0.5, 0.25, 0.125, 0.0625, 1.0/60.0]
         self._frameRate = rates[value]
-
+        if self._vpAppTimer:
+            self._vpAppTimer.interval = self._frameRate
+        
     def gravityConst(self):
         return self._gravity.gravitation()
 
@@ -307,10 +300,13 @@ class GutsController(object):
         # update the trail points of each trail
         if mode == "Trails":
             # Extend line vertices up to a max length
-            newLen = self._trailLen + 1
-            newTrails = self._trails.reshape(bodyCount, newLen*3)
+            pntCount = self._trailLen + 1    # trailLen to point count
+            # Change bodyCount x pntCount x 3 3D array to 2D
+            newTrails = self._trails.reshape(bodyCount, pntCount*3)
+            # extend each 1D x0,y0,z0,x1,y1,z1 are by one xyz point
             newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
-            self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
+            # Reshape extednd 2D array back to 3D
+            self._trails = newTrails.reshape(bodyCount, pntCount+1, 3)
             self._trailLen += 1
             if self._trailLen > self._trailMax:
                 # Delete first vertex of each trail vertex list
@@ -322,10 +318,13 @@ class GutsController(object):
 
         elif mode == "Tubular":
             # Need to create new visuals, then delete previous vis (for now)
-            newLen = self._trailLen + 1
-            newTrails = self._trails.reshape(bodyCount, newLen*3)
+            if self._trailLen % 2 == 0:
+                self._trailLen += 1
+                return  #only every other position
+            pntCount = (self._trailLen+1) // 2 + 1
+            newTrails = self._trails.reshape(bodyCount, pntCount*3)
             newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
-            self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
+            self._trails = newTrails.reshape(bodyCount, pntCount+1, 3)
             self._trailLen += 1
             if self._trailLen > self._trailMax:
                 # Delete first vertex of each trail vertex list
