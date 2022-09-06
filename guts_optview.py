@@ -48,8 +48,7 @@ class OptionsView(QDialog):
 
     def setRunning(self, running):
         self._newSimBTN.setEnabled(not running)
-        self._startBTN.setEnabled(not running)
-        self._stopBTN.setEnabled(running)
+        self._startStopBTN.setEnabled(True)
         self._jumpOneBTN.setEnabled(not running)
         self._addBTN.setEnabled(not running)
         self._delBTN.setEnabled(not running)
@@ -62,15 +61,10 @@ class OptionsView(QDialog):
         actslo.addWidget(self._newSimBTN)
         self._newSimBTN.clicked.connect(self._optCtrlr.actionNewSimulation)
 
-        self._startBTN = QPushButton("Start")
-        actslo.addWidget(self._startBTN)
-        self._startBTN.clicked.connect(self._optCtrlr.actionStartSimulation)
-        self._startBTN.setEnabled(False)
-
-        self._stopBTN = QPushButton("Stop")
-        actslo.addWidget(self._stopBTN)
-        self._stopBTN.clicked.connect(self._optCtrlr.actionStopSimulation)
-        self._stopBTN.setEnabled(False)
+        self._startStopBTN = QPushButton("Start")
+        actslo.addWidget(self._startStopBTN)
+        self._startStopBTN.clicked.connect(self._startStopCB)
+        self._startStopBTN.setEnabled(False)
 
         wgt = QPushButton("Jump One Second")
         actslo.addWidget(wgt)
@@ -314,6 +308,15 @@ class OptionsView(QDialog):
                 self._optCtrlr.setPositionRange(newMin, posRange[1])
                 return
         self._posMinLE.setText(f"{posRange[0]}")
+
+    def _startStopCB(self):
+        text = self._startStopBTN.text()
+        if text == "Start":
+            self._startStopBTN.setText("Stop")
+            self._optCtrlr.actionStartSimulation()
+        else:
+            self._startStopBTN.setText("Start")
+            self._optCtrlr.actionStopSimulation()
 
     def _velMaxChangeDone(self):
         text = self._velMaxLE.text()

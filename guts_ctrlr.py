@@ -17,7 +17,7 @@ class GutsController(object):
         self._vpApp      = None
 
         self._gravity = None
-
+        
         self._spinSwitch  = "Spin Off"
         self._spinAngles  = numpy.array([0.0, 0.0, 0.0])
         self._spinModes   = { "X"   : numpy.array([0.5, 0.0, 0.0]),
@@ -119,6 +119,7 @@ class GutsController(object):
 
         self._mainWin.setWindowTitle("GUTS - %s(%s)" %
                                      (self._frameMode, bodyPoses.shape[0]))
+
     def actionQuit(self):
         if self._vpApp:
             self._vpApp.quit()
@@ -141,6 +142,8 @@ class GutsController(object):
             spinBTN.setText("Spin On")
         
     def actionStartSimulation(self):
+        if self._gravity.bodyPositions() is None:
+            return  # No simulation ready
         if self._frameMode == "Merge":
             self._gravity.detectCollisions(True)
         self._running = True
