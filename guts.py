@@ -63,5 +63,6 @@ if __name__ == "__main__":
     optsView = OptionsView(gutsCtrlr)
     optsView.show()
     gutsCtrlr.setUIView(optsView)
+    gutsCtrlr.recoverOptions()
     
     vispyApp.run()

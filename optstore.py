@@ -55,10 +55,18 @@ class OptionsStore(object):
         return modeOpts.get(optKey)
 
     def readOptions(self, optPath):
-        with open(optPath, "r") as optFP:
-            optStr = optFP.read()
-            return json.loads(optStr)
-
+        try:
+            with open(optPath, "r") as optFP:
+                optStr = optFP.read()
+                return json.loads(optStr)
+        except FileNotFoundError as fnfx:
+            raise fnfx
+        except PermissionError as prmx:
+            raise prmx
+        except:
+            raise sys.exc_info()[1]
+        return None
+            
     def options(self, frameMode=None):
         if frameMode is None:
             return self._currentOpts
@@ -71,6 +79,9 @@ class OptionsStore(object):
         if modeOpts is None:
             modeOpts = self._currentOpts[frameMode] = {}
         modeOpts[optKey] = optValue
+
+    def setCurrentOptions(self, opts):
+        self._currentOpts.update(opts)
 
     def updateOptions(self, frameMode, options):
         self._currentOpts[frameMode] = options

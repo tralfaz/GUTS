@@ -77,7 +77,7 @@ class OptionsView(QDialog):
                 spinIndex = spins.index(optval)
             except ValueError:
                 spinIndex = 2
-                self._spinModeCOMBO.setCurrentIndex(spinIndex)
+            self._spinModeCOMBO.setCurrentIndex(spinIndex)
         optval = opts.get(optstore.TRAIL_LEN)
         if optval is not None:
             self._trailLenSBX.setValue(optval)
@@ -185,10 +185,12 @@ class OptionsView(QDialog):
         massMinLBL = QLabel("Mass Range: min ")
         self._massMinLE  = QLineEdit()
         self._massMinLE.setText(f"{massRange[0]}")
+        self._massMinLE.textChanged.connect(self._massMinChanged)
         self._massMinLE.editingFinished.connect(self._massMinChangeDone)
         massMaxLBL = QLabel()
         massMaxLBL.setText("max ")
         self._massMaxLE = QLineEdit()
+        self._massMaxLE.textChanged.connect(self._massMaxChanged)
         self._massMaxLE.editingFinished.connect(self._massMaxChangeDone)
         self._massMaxLE.setText(f"{massRange[1]}")
 
@@ -204,11 +206,13 @@ class OptionsView(QDialog):
         posMinLBL = QLabel("Position Range: min ")
         self._posMinLE  = QLineEdit()
         self._posMinLE.setText(f"{posRange[0]}")
+        self._posMinLE.textChanged.connect(self._posMinChanged)
         self._posMinLE.editingFinished.connect(self._posMinChangeDone)
         posMaxLBL = QLabel()
         posMaxLBL.setText("max ")
         self._posMaxLE = QLineEdit()
         self._posMaxLE.setText(f"{posRange[1]}")
+        self._posMaxLE.textChanged.connect(self._posMaxChanged)
         self._posMaxLE.editingFinished.connect(self._posMaxChangeDone)
 
         posHbox = QHBoxLayout()
@@ -223,11 +227,13 @@ class OptionsView(QDialog):
         velMinLBL = QLabel("Velocity Range: min ")
         self._velMinLE  = QLineEdit()
         self._velMinLE.setText(f"{velRange[0]}")
+        self._velMinLE.textChanged.connect(self._velMinChanged)
         self._velMinLE.editingFinished.connect(self._velMinChangeDone)
         velMaxLBL = QLabel()
         velMaxLBL.setText("max ")
         self._velMaxLE = QLineEdit()
         self._velMaxLE.setText(f"{velRange[1]}")
+        self._velMaxLE.textChanged.connect(self._velMaxChanged)
         self._velMaxLE.editingFinished.connect(self._velMaxChangeDone)
 
         velHbox = QHBoxLayout()
@@ -313,42 +319,62 @@ class OptionsView(QDialog):
         hbox.addWidget(wgt)
         pvbox.addLayout(hbox)
 
+    def _massMaxChanged(self, text):
+        massRange = self._optCtrlr.massRange()
+        newMax = _stof(text)
+        if newMax is not None and newMax > massRange[0]:
+            self._optCtrlr.setMassRange(massRange[0], newMax)
+
     def _massMaxChangeDone(self):
         text = self._massMaxLE.text()
         massRange = self._optCtrlr.massRange()
         newMax = _stof(text)
-        if newMax is not None:
-            if newMax > massRange[0]:
-                self._optCtrlr.setMassRange(massRange[0], newMax)
-                return
+        if newMax is not None and newMax > massRange[0]:
+            self._optCtrlr.setMassRange(massRange[0], newMax)
+            return
         self._massMaxLE.setText(f"{massRange[1]}")
+
+    def _massMinChanged(self, text):
+        massRange = self._optCtrlr.massRange()
+        newMin = _stof(text)
+        if newMin is not None and newMin < massRange[1]:
+            self._optCtrlr.setMassRange(newMin, massRange[1])
 
     def _massMinChangeDone(self):
         text = self._massMinLE.text()
         massRange = self._optCtrlr.massRange()
         newMin = _stof(text)
-        if newMin is not None:
-            if newMin < massRange[1]:
-                self._optCtrlr.setMassRange(newMin, massRange[1])
-                return
+        if newMin is not None and newMin < massRange[1]:
+            self._optCtrlr.setMassRange(newMin, massRange[1])
+            return
         self._massMinLE.setText(f"{massRange[0]}")
+
+    def _posMaxChanged(self, text):
+        posRange = self._optCtrlr.positionRange()
+        newMax = _stof(text)
+        if newMax is not None and newMax > posRange[0]:
+            self._optCtrlr.setPositionRange(posRange[0], newMax)
 
     def _posMaxChangeDone(self):
         text = self._posMaxLE.text()
         posRange = self._optCtrlr.positionRange()
         newMax = _stof(text)
-        if newMax is not None:
-            if newMax > posRange[0]:
-                self._optCtrlr.setPositionRange(posRange[0], newMax)
-                return
+        if newMax is not None and newMax > posRange[0]:
+            self._optCtrlr.setPositionRange(posRange[0], newMax)
+            return
         self._posMaxLE.setText(f"{posRange[1]}")
+
+    def _posMinChanged(self, text):
+        posRange = self._optCtrlr.positionRange()
+        newMin = _stof(text)
+        if newMin is not None and newMin < posRange[1]:
+            self._optCtrlr.setPositionRange(newMin, posRange[1])
 
     def _posMinChangeDone(self):
         text = self._posMinLE.text()
         posRange = self._optCtrlr.positionRange()
         newMin = _stof(text)
-        if newMin is not None:
-            if newMin < posRange[1]:
+        if newMin is not None and newMin < posRange[1]:
                 self._optCtrlr.setPositionRange(newMin, posRange[1])
                 return
         self._posMinLE.setText(f"{posRange[0]}")
@@ -362,22 +388,32 @@ class OptionsView(QDialog):
             self._startStopBTN.setText("Start")
             self._optCtrlr.actionStopSimulation()
 
+    def _velMaxChanged(self, text):
+        velRange = self._optCtrlr.velocityRange()
+        newMax = _stof(text)
+        if newMax is not None and newMax > velRange[0]:
+            self._optCtrlr.setVelocityRange(velRange[0], newMax)
+
     def _velMaxChangeDone(self):
         text = self._velMaxLE.text()
         velRange = self._optCtrlr.velocityRange()
         newMax = _stof(text)
-        if newMax is not None:
-            if newMax > velRange[0]:
-                self._optCtrlr.setVelocityRange(velRange[0], newMax)
-                return
+        if newMax is not None and newMax > velRange[0]:
+            self._optCtrlr.setVelocityRange(velRange[0], newMax)
+            return
         self._velMaxLE.setText(f"{velRange[1]}")
+
+    def _velMinChanged(self, text):
+        velRange = self._optCtrlr.velocityRange()
+        newMin = _stof(text)
+        if newMin is not None and newMin < velRange[1]:
+            self._optCtrlr.setVelocityRange(newMin, velRange[1])
 
     def _velMinChangeDone(self):
         text = self._velMinLE.text()
         velRange = self._optCtrlr.velocityRange()
         newMin = _stof(text)
-        if newMin is not None:
-            if newMin < velRange[1]:
-                self._optCtrlr.setVelocityRange(newMin, velRange[1])
-                return
+        if newMin is not None and newMin < velRange[1]:
+            self._optCtrlr.setVelocityRange(newMin, velRange[1])
+            return
         self._velMinLE.setText(f"{velRange[0]}")

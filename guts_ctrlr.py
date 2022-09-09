@@ -1,4 +1,5 @@
 import math
+import sys
 
 import gravity
 import optstore
@@ -263,6 +264,28 @@ class GutsController(object):
     def positionRange(self):
         return self._gravity.positionRange()
 
+    def recoverOptions(self):
+        if len(sys.argv) > 1:
+            optPath = sys.argv[1]
+            defaultPath = False
+        else:
+            optPath = self._optStore.findDefaultPath()
+            defaultPath = True
+        opts = None
+        try:    
+            opts = self._optStore.readOptions(optPath)
+        except FileNotFoundError as fnfx:
+            if not defaultPath:
+                print(f"GUTS ERROR: Option file not found: {fnfx.filename}")
+        except PermissionError as prmx:
+            print(f"GUTS ERROR: Can't read options file: {prmx.filename}")
+        except:
+            print(f"GUTS ERROR: Reading options file: {sys.exc_info()}")
+
+        if opts:
+            self._optStore.setCurrentOptions(opts)
+            self._restoreOptions(self._frameMode)
+
     def setMainWin(self, mainWin):
         self._mainWin = mainWin
         self._vpView  = mainWin.vispyView()
@@ -399,10 +422,8 @@ class GutsController(object):
 #        print(f"_spinTimerCB: SA={self._spinAngles}")
         sa = self._spinAngles + self._spinDeltas
         sa %= 360.0
-                                                      # roll,  pitch, yaw
-#        viewAngle = Quaternion.create_from_euler_angles(sa[2], sa[0], sa[1], True)
-        viewAngle =  Quaternion.create_from_euler_angles(sa[2], sa[1],
-                                                         sa[0], True)
+                                                         # roll,  pitch, yaw
+        viewAngle =  Quaternion.create_from_euler_angles(sa[2], sa[1], sa[0], True)
         self._vpView.camera.set_state({ "_quaternion": viewAngle })
         self._vpView.camera.view_changed()
         self._spinAngles = sa
