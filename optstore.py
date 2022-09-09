@@ -1,16 +1,19 @@
 import json
+import os
+import pwd
+import sys
+
+BODY_COUNT = "BodyCount"
+GRAV_CONST = "G"
+MASS_RANGE = "MassRange"
+POS_RANGE  = "PosRange"
+VEL_RANGE  = "VelRange"
+FRAME_RATE = "FrameRate"
+SPIN_MODE  = "SpinMode"
+TRAIL_LEN  = "TrailLen"
+COLL_DIST  = "CollDist"
 
 class OptionsStore(object):
-
-    BODY_COUNT = "BodyCount"
-    GRAV_CONST = "G"
-    MASS_RANGE = "MassRange"
-    POS_RANGE  = "PosRange"
-    VEL_RANGE  = "VelRange"
-    FRAME_RATE = "FrameRate"
-    SPIN_MODE  = "SpinMode"
-    TRAIL_LEN  = "TrailLen"
-    COLL_DIST  = "CollDist"
 
     DEFAULTS = { BODY_COUNT: 3,
                  GRAV_CONST: 0.00133440,
@@ -29,12 +32,26 @@ class OptionsStore(object):
         self._currentOpts = { }
 
     def findDefaultPath(self):
-        return "guts.opts"
+        fname = ".gutsrc"
+        if sys.platform in ("win32", "win64"):
+            home = os.getenv("HOME")
+        else:
+            pwEnt = pwd.getpwuid(os.getuid())
+            if pwEnt:
+                home = pwEnt.pw_dir
+            else:
+                home = os.getenv("HOME")
+        if home:
+            optPath = os.path.join(home, fname)
+        else:
+            optPath = fname
+        return optPath
 
     def getOption(self, frameMode, optKey):
         modeOpts = self._currentOpts.get(frameMode)
         if modeOpts is None:
             modeOpts = self._currentOpts[frameMode] = {}
+            modeOpts.update(self.DEFAULTS)
         return modeOpts.get(optKey)
 
     def readOptions(self, optPath):
@@ -46,8 +63,7 @@ class OptionsStore(object):
         if frameMode is None:
             return self._currentOpts
         else:
-            modeOpts = self._currentOpts[frameMode] = {}
-            modeOpts.update(OptionsStore.DEFAULTS)
+            modeOpts = self._currentOpts.get(frameMode, OptionsStore.DEFAULTS)
             return modeOpts
             
     def setOption(self, frameMode, optKey, optValue):
@@ -59,9 +75,11 @@ class OptionsStore(object):
     def updateOptions(self, frameMode, options):
         self._currentOpts[frameMode] = options
 
-    def writeOptions(self, optPath, optDict):
+    def writeOptions(self, optPath, optDict=None):
+        if optDict is None:
+            optDict = self._currentOpts
         with open(optPath, "w") as optFP:
-            optStr = json.dumps(optDict)
+            optStr = json.dumps(optDict, sort_keys=True, indent=4)
             optFP.write(optStr)
 
 

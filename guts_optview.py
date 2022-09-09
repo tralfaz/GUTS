@@ -1,4 +1,5 @@
 import gravity
+import optstore
 
 from PyQt6.QtCore import QObject, pyqtSlot
 from PyQt6.QtWidgets import (QMainWindow,
@@ -43,8 +44,46 @@ class OptionsView(QDialog):
         self.setLayout(self._dlgLayout)
 
     def applyOptions(self, opts):
-        if opts.get("trailMax"):
-            self._trailLenSBX.setValue(opts.get("trailMax", 1000))
+        optval = opts.get(optstore.BODY_COUNT)
+        if optval is not None:
+            self._bodiesSBX.setValue(optval)
+        optval = opts.get(optstore.GRAV_CONST)
+        if optval is not None:
+            self._gravSBX.setValue(optval)
+        optval = opts.get(optstore.MASS_RANGE)
+        if optval is not None:
+            self._massMinLE.setText(f"{optval[0]:1.1f}")
+            self._massMaxLE.setText(f"{optval[1]:1.1f}")
+        optval = opts.get(optstore.POS_RANGE)
+        if optval is not None:
+            self._posMinLE.setText(f"{optval[0]:1.1f}")
+            self._posMaxLE.setText(f"{optval[1]:1.1f}")
+        optval = opts.get(optstore.VEL_RANGE)
+        if optval is not None:
+            self._velMinLE.setText(f"{optval[0]:1.1f}")
+            self._velMaxLE.setText(f"{optval[1]:1.1f}")
+        optval = opts.get(optstore.FRAME_RATE)
+        if optval is not None:
+            rates = [1.0, 0.5, 0.25, 0.125, 0.0625, 1.0/60.0]
+            try:
+                rateIndex = rates.index(optval)
+            except ValueError:
+                rateIndex = 2
+            self._frameRateCOMBO.setCurrentIndex(rateIndex)
+        optval = opts.get(optstore.SPIN_MODE)
+        if optval is not None:
+            spins = ["X", "Y", "Z", "XY", "XZ", "YZ", "XYZ"]
+            try:
+                spinIndex = spins.index(optval)
+            except ValueError:
+                spinIndex = 2
+                self._spinModeCOMBO.setCurrentIndex(spinIndex)
+        optval = opts.get(optstore.TRAIL_LEN)
+        if optval is not None:
+            self._trailLenSBX.setValue(optval)
+        optval = opts.get(optstore.COLL_DIST)
+        if optval is not None:
+            self._collDistSBX.setValue(int(optval))
 
     def setRunning(self, running):
         self._newSimBTN.setEnabled(not running)
@@ -84,7 +123,7 @@ class OptionsView(QDialog):
         
         wgt = QPushButton("Test")
         actslo.addWidget(wgt)
-        wgt.clicked.connect(self._optCtrlr._test3)
+        wgt.clicked.connect(self._optCtrlr._testCB)
         self._test1BTN = wgt
 
         wgt = QPushButton("Spin Off")
@@ -92,10 +131,10 @@ class OptionsView(QDialog):
         wgt.clicked.connect(self._optCtrlr.actionSpinSwitch)
         self._spinSwitchBTN = wgt
 
-#        wgt = QPushButton("Save Options")
-#        actslo.addWidget(wgt)
-#        wgt.clicked.connect(self._optCtrlr.actionSaveOptions)
-#        self._saveOptionsBTN = wgt
+        wgt = QPushButton("Save Options")
+        actslo.addWidget(wgt)
+        wgt.clicked.connect(self._optCtrlr.actionSaveOptions)
+        self._saveOptionsBTN = wgt
 
         quitBTN = QPushButton("Quit")
         actslo.addWidget(quitBTN)
@@ -112,31 +151,33 @@ class OptionsView(QDialog):
         paramGRP.setLayout(pvbox)
         optslo.addWidget(paramGRP)
 
+        # Body Count
         bodiesLBL = QLabel()
         bodiesLBL.setText("Bodies: ")
 
-        bodiesSBX = QSpinBox()
-        bodiesSBX.setRange(1, 16)
-        bodiesSBX.setValue(3)
-        bodiesSBX.valueChanged.connect(ctlr.bodyCountChanged)
+        self._bodiesSBX = QSpinBox()
+        self._bodiesSBX.setRange(1, 16)
+        self._bodiesSBX.setValue(3)
+        self._bodiesSBX.valueChanged.connect(ctlr.bodyCountChanged)
 
         hbox = QHBoxLayout()
         hbox.addWidget(bodiesLBL)
-        hbox.addWidget(bodiesSBX)
+        hbox.addWidget(self._bodiesSBX)
         pvbox.addLayout(hbox)
 
-        gravLBL = QLabel()
-        gravLBL.setText("Gravity: ")
+        lbl = QLabel()
+        lbl.setText("Gravity: ")
         
-        gravSBX = QDoubleSpinBox()
-        gravSBX.setDecimals(15)
-        gravSBX.setValue(ctlr.gravityConst())
-        gravSBX.setSingleStep(gravity.G)
-        gravSBX.valueChanged.connect(ctlr.gravityConstChanged)
+        wgt = QDoubleSpinBox()
+        wgt.setDecimals(15)
+        wgt.setValue(ctlr.gravityConst())
+        wgt.setSingleStep(gravity.G)
+        wgt.valueChanged.connect(ctlr.gravityConstChanged)
+        self._gravSBX = wgt
         
         gravHbox = QHBoxLayout()
-        gravHbox.addWidget(gravLBL)
-        gravHbox.addWidget(gravSBX)
+        gravHbox.addWidget(lbl)
+        gravHbox.addWidget(wgt)
         pvbox.addLayout(gravHbox)
 
         # Mass Random Range in Kg
@@ -211,8 +252,8 @@ class OptionsView(QDialog):
         pvbox.addLayout(frameModeHbox)
 
         # Frame Rate Option Menu
-        frameRateLBL = QLabel()
-        frameRateLBL.setText("Frame Rate: ")
+        lbl = QLabel()
+        lbl.setText("Frame Rate: ")
 
         wgt = QComboBox()
         wgt.insertItems(0, ["1/sec", "2/sec", "4/sec", "8/sec",
@@ -222,7 +263,7 @@ class OptionsView(QDialog):
         self._frameRateCOMBO = wgt
 
         hbox = QHBoxLayout()
-        hbox.addWidget(frameRateLBL)
+        hbox.addWidget(lbl)
         hbox.addWidget(wgt)
         pvbox.addLayout(hbox)
 
@@ -234,12 +275,14 @@ class OptionsView(QDialog):
         wgt.insertItems(0, ["X", "Y", "Z", "XY", "XZ", "YZ", "XYZ"])
         wgt.setCurrentIndex(0)
         wgt.currentIndexChanged.connect(ctlr.spinModeChanged)
-
+        self._spinModeCOMBO = wgt
+        
         hbox = QHBoxLayout()
         hbox.addWidget(lbl)
         hbox.addWidget(wgt)
         pvbox.addLayout(hbox)
 
+        # Trail Limit
         trailLenLBL = QLabel()
         trailLenLBL.setText("Trail Length:")
 
@@ -255,18 +298,19 @@ class OptionsView(QDialog):
         hbox.addWidget(self._trailLenSBX)
         pvbox.addLayout(hbox)
 
-        colDistLBL = QLabel()
-        colDistLBL.setText("Collision Distance:")
+        lbl = QLabel()
+        lbl.setText("Collision Distance:")
 
-        colDistSBX = QSpinBox()
-        colDistSBX.setRange(1, 15)
-        colDistSBX.setValue(int(ctlr.collisionDistance()))
-        colDistSBX.setSingleStep(1)
-        colDistSBX.valueChanged.connect(ctlr.collDistChanged)
-
+        wgt = QSpinBox()
+        wgt.setRange(1, 15)
+        wgt.setValue(int(ctlr.collisionDistance()))
+        wgt.setSingleStep(1)
+        wgt.valueChanged.connect(ctlr.collDistChanged)
+        self._collDistSBX = wgt
+        
         hbox = QHBoxLayout()
-        hbox.addWidget(colDistLBL)
-        hbox.addWidget(colDistSBX)
+        hbox.addWidget(lbl)
+        hbox.addWidget(wgt)
         pvbox.addLayout(hbox)
 
     def _massMaxChangeDone(self):
