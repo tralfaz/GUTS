@@ -232,7 +232,8 @@ class GutsController(object):
         subSceneKids = viewKids[0].children
         for mdx, obj in enumerate(subSceneKids):
             if mdx > 1:
-                subSceneKids[mdx].parent = None
+                if obj.name != "GUTSAxis":
+                    subSceneKids[mdx].parent = None
 
     def collDistChanged(self, value):
         self._gravity.setCollisiionDistance(value)
