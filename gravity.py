@@ -94,7 +94,9 @@ class Gravity(object):
 
         # Determine new mass positions
         # posXYZ + velXYZ + (accelXYZ / 2.0)
-        accel3D2 = accel3D / 2.0
+        # GRAV A: accel3D2 = accel3D / 2.0
+        # GRAV B: accel3D2 = accel3D 
+        accel3D2 = accel3D
         newPos3D = self._positions + self._velocities + accel3D2
 
         # final velocity = initial velocity + acceleration * time(=1)
@@ -268,6 +270,8 @@ class Gravity(object):
             # Get vector forces between current mass and other masses 
             m2m1s = mass2 * otherMasses
             #print(f"m2m1s = {m2m1s}")
+            #GRAV A m2m1r1s = m2m1s / m21Dists
+            # GRAV C Should really be  m2m1r1s = m2m1s / (m21Dists ** 2)
             m2m1r1s = m2m1s / m21Dists
             #print(f"m2m1r1s = {m2m1r1s}")
             m2fxyz = m2m1r1s[:, numpy.newaxis] * m21Norms
