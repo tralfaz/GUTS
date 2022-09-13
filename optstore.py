@@ -1,7 +1,8 @@
 import json
 import os
-import pwd
 import sys
+if sys.platform not in ("win32", "win64"):
+    import pwd
 
 BODY_COUNT = "BodyCount"
 GRAV_CONST = "G"
