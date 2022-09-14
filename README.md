@@ -17,7 +17,7 @@ be done with the following actions:
 
    Shift - Mouse shift-button-1 drag to shift scene origin
 
-! [image] (/docs/screen-shot01-png "Screent Shot Snakes Mode")
+![Snakes Mode](/docs/screen-shot01-png "Screent Shot Snakes Mode")
 
 Actions:
 ---------------------------------
