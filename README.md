@@ -7,7 +7,7 @@ provides controls to create, start, and stop a simulation run.  It also
 provides controls to change various parameters used in generating random
 starting conditions.
 
-The other window is used excusiovely to display simulation scene.  This window
+The other window is used excusively to display simulation scene.  This window
 provides the user the ability to rotate, zoom, and shift the scene.  This can
 be done with the following actions:
 
@@ -16,6 +16,8 @@ be done with the following actions:
    Rotate - Mouse button-1 drag rotates scene
 
    Shift - Mouse shift-button-1 drag to shift scene origin
+
+! [image] (docs/screen-shot01-png) "Screent Shot Snakes
 
 Actions:
 ---------------------------------
@@ -77,10 +79,13 @@ Options
 
      Tubular - Like Trails but body trails are made of translucent tubes.
 
-     Add - Adds new markers with each frame step.  Produces something like
-           Anime tentacle porn.  Who doesn't like anime tentacle porn.
+     Snakes - Adds new markers with each frame step.  Produces something like
+              Anime tentacle porn.  Who doesn't like anime tentacle porn.
 
      Merge - Like Move, but body collisions merge masses.
+
+     Cloud - Like Move, but bodies are represented by dots, but the body
+             count is multiplied by 100.
 
 
   Frame Rate:

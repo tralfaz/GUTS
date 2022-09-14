@@ -102,6 +102,11 @@ class GutsController(object):
         self._tubeColors = None
         self._tubeSizes  = None
         
+        if self._frameMode == "Cloud":
+            self._gravity.setBodyCount(self._bodyCount*100)
+        else:
+            self._gravity.setBodyCount(self._bodyCount)
+            
         self._gravity.createRandomBodies()
         #self._gravity.printState()
 
@@ -172,7 +177,7 @@ class GutsController(object):
         newPos = self._gravity.bodyPositions()
         bodySizes = self._gravity.bodySizes()
         bodyColors = self._gravity.bodyColors()
-        if mode == "Add":
+        if mode == "Snakes":
             newVis = vispyScene.visuals.Markers(pos=newPos,
                                                 size=bodySizes,
                                                 antialias=0,
@@ -189,7 +194,13 @@ class GutsController(object):
                 if len(subSceneKids) > 2:
                     subSceneKids[2].parent = None
 
-        elif mode != "Add" and self._firstMarkers:
+        elif mode in "Cloud" and self._firstMarkers:
+            self._firstMarkers.set_data(pos=newPos,
+                                        size=5.0,
+                                        face_color=self._gravity.bodyColors(),
+                                        edge_color=None)
+
+        elif mode != "Snakes" and self._firstMarkers:
             if coll:
                 self._gravity.mergeBodies(coll[0], coll[1])
                 self._makeBodyMarkers()
@@ -372,16 +383,24 @@ class GutsController(object):
         if self._firstMarkers:
             self._firstMarkers.parent = None
 
-        bodyPoses = self._gravity.bodyPositions()
-        newVis = vispyScene.visuals.Markers(pos=bodyPoses,
-                                size=self._gravity.bodySizes(),
-                                antialias=0,
-                                face_color=self._gravity.bodyColors(),
-                                edge_color='white',
-                                edge_width=0,
-                                scaling=True,
-                                spherical=True,
-                                parent=self._vpView.scene)
+        bodyPoses  = self._gravity.bodyPositions()
+        bodyColors = self._gravity.bodyColors()
+        if self._frameMode == "Cloud":
+            newVis = vispyScene.visuals.Markers(parent=self._vpView.scene)
+            newVis.set_data(pos=bodyPoses,
+                            size=5.0,
+                            face_color=bodyColors,
+                            edge_color=None)
+        else:
+            newVis = vispyScene.visuals.Markers(pos=bodyPoses,
+                                                size=self._gravity.bodySizes(),
+                                                antialias=0,
+                                                face_color=bodyColors,
+                                                edge_color='white',
+                                                edge_width=0,
+                                                scaling=True,
+                                                spherical=True,
+                                                parent=self._vpView.scene)
         self._firstMarkers = newVis
 
     def _makeTrailHeads(self, mode, bodyPoses, bodyColors, bodySizes):
