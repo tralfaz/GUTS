@@ -17,7 +17,7 @@ be done with the following actions:
 
    Shift - Mouse shift-button-1 drag to shift scene origin
 
-![Snakes Mode](docs/screen-shot01-png "Screent Shot Snakes Mode")
+![Snakes Mode](https://raw.githubusercontent.com/tralfaz/GUTS/main/docs/screen-shot01.png "Screen Shot Snakes Mode")
 
 Actions:
 ---------------------------------
