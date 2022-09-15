@@ -51,6 +51,11 @@ class GutsMainWin(QWidget):
         vbox.addWidget(self._vpCanvas.native)
         self.setLayout(vbox)
 
+        self._optWidget = None
+
+    def setOptionsView(self, optWidget):
+        self._optWidget = optWidget
+
     def vispyApp(self):
         return self._vispyApp
 
@@ -62,7 +67,14 @@ class GutsMainWin(QWidget):
 
     def _vpCanvasKeyPressCB(self, event):
 #        print(f"_vpCanvasKeyPressCB: {dir(event)}")
-        if event.key == "X" and vispyKeys.SHIFT in event.modifiers:
+        if event.key == "c":
+            self._optWidget.raise_()
+        elif event.key == "m":
+            if self.isMaximized():
+                self.showNormal()
+            else:
+                self.showMaximized()
+        elif event.key == "x" and vispyKeys.SHIFT in event.modifiers:
             if self._axisSize == 0.0:
                 self._axisSize = 50.0
             else:
@@ -97,5 +109,7 @@ if __name__ == "__main__":
     optsView.show()
     gutsCtrlr.setUIView(optsView)
     gutsCtrlr.recoverOptions()
+    
+    mainWin.setOptionsView(optsView)
     
     vispyApp.run()
