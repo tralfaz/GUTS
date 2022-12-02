@@ -44,19 +44,50 @@ class Gravity(object):
     def collisionDistance(self):
         return self._collisionDist
 
-    def createRandomBodies(self):
+    def createRandomBodies(self, mode='box'):
         self._massForces = None
         
-        # Create 3D random body positions (Xm, Ym, Zm)
-        self._positions = numpy.random.rand(self._bodyCount, 3)
-        self._positions *= (self._posRange[1] - self._posRange[0])
-        self._positions += self._posRange[0]
+        if mode == "sphere":
+            # positions on sphere surface, random velocities
 
-        # Create 3D random body velocity vectors (Xm/s, Ym/s, Zm/s)
-        self._velocities = numpy.random.rand(self._bodyCount, 3)
-        self._velocities *= (self._velRange[1] - self._velRange[0])
-        self._velocities += self._velRange[0]
+            # Create 3D random body positions on sphere surface
+            randPos = numpy.random.rand(pntCount,3) * 2.0 - 1.0
+            randMags = numpy.linalg.norm(vecs, axis=1)
+            randNorms = randPos / randMags[:, numpy.newaxis]
+            self._positions = randNorms * (self._posRange[1] - self._posRange[0])
 
+            # Create 3D random body velocity vectors (Xm/s, Ym/s, Zm/s)
+            self._velocities = numpy.random.rand(self._bodyCount, 3)
+            self._velocities *= (self._velRange[1] - self._velRange[0])
+            self._velocities += self._velRange[0]
+ 
+        elif mode == "bang":
+            # positions on sphere surface, velocities from center
+
+            # Create 3D random body positions on sphere surface
+            randPos = numpy.random.rand(pntCount,3) * 2.0 - 1.0
+            randMags = numpy.linalg.norm(vecs, axis=1)
+            randNorms = vecs / mags[:, numpy.newaxis]
+            self._positions = randNorms * (self._posRange[1] - self._posRange[0])
+            surface = norms * 20.0
+
+            # Create 3D velocity vectors all moving from origin
+            vmags = numpy.random.rand(pntCount,1) * 5.0 #(velRange[1]-velRange[0])
+            velVecs = norms * (15.0 + vmags)
+            print("VELVECS:\n", velVecs)
+            velVecsCore = numpy.hstack([velVecs,core]).reshape(pntCount*2,3)
+            
+        else:
+            # Create 3D random body positions (Xm, Ym, Zm)
+            self._positions = numpy.random.rand(self._bodyCount, 3)
+            self._positions *= (self._posRange[1] - self._posRange[0])
+            self._positions += self._posRange[0]
+
+            # Create 3D random body velocity vectors (Xm/s, Ym/s, Zm/s)
+            self._velocities = numpy.random.rand(self._bodyCount, 3)
+            self._velocities *= (self._velRange[1] - self._velRange[0])
+            self._velocities += self._velRange[0]
+ 
         # Create random body masses (Kg)
         self._masses = numpy.random.rand(self._bodyCount)
         self._masses *= (self._massRange[1] - self._massRange[0])

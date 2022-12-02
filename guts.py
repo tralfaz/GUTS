@@ -68,12 +68,25 @@ class GutsMainWin(QWidget):
     def _vpCanvasKeyPressCB(self, event):
 #        print(f"_vpCanvasKeyPressCB: {dir(event)}")
         if event.key == "c":
-            self._optWidget.raise_()
+            if self._optWidget.isVisible():
+                self._optWidget.lower()
+                self._optWidget.setVisible(False)
+            else:
+                self._optWidget.raise_()
+                self._optWidget.setVisible(True)
+
         elif event.key == "m":
             if self.isMaximized():
                 self.showNormal()
             else:
                 self.showMaximized()
+
+        elif event.key == "n":
+            self._optWidget.newSimulation()
+
+        elif event.key == "s":
+            self._optWidget._startStopCB()
+            
         elif event.key == "x" and vispyKeys.SHIFT in event.modifiers:
             if self._axisSize == 0.0:
                 self._axisSize = 50.0

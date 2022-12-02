@@ -85,6 +85,9 @@ class OptionsView(QDialog):
         if optval is not None:
             self._collDistSBX.setValue(int(optval))
 
+    def newSimulation(self):
+        self._optCtrlr.actionNewSimulation()
+    
     def setRunning(self, running):
         self._newSimBTN.setEnabled(not running)
         self._startStopBTN.setEnabled(True)

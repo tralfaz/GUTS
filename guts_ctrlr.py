@@ -197,7 +197,7 @@ class GutsController(object):
         elif mode in "Cloud" and self._firstMarkers:
             self._firstMarkers.set_data(pos=newPos,
                                         size=5.0,
-                                        face_color=self._gravity.bodyColors(),
+                                        face_color=self._cloudRGBA,
                                         edge_color=None)
 
         elif mode != "Snakes" and self._firstMarkers:
@@ -386,10 +386,12 @@ class GutsController(object):
         bodyPoses  = self._gravity.bodyPositions()
         bodyColors = self._gravity.bodyColors()
         if self._frameMode == "Cloud":
+            alpha = numpy.ones((bodyColors.shape[0],1)) * 0.5
+            self._cloudRGBA = numpy.hstack([bodyColors, alpha])
             newVis = vispyScene.visuals.Markers(parent=self._vpView.scene)
             newVis.set_data(pos=bodyPoses,
                             size=5.0,
-                            face_color=bodyColors,
+                            face_color=self._cloudRGBA,
                             edge_color=None)
         else:
             newVis = vispyScene.visuals.Markers(pos=bodyPoses,

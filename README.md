@@ -101,6 +101,22 @@ Options
      Distance between two body centers to be produce a mass merge.
 
 
+Simulation View Keyboard Actions
+----------------------------------
+
+    c - Show / Hide Control/Options dialog
+
+    m - Maximize / Unmaximize Simulation View window
+
+    n - New Simulation
+
+    s - Start / Stop simulation
+
+    X - Show / Increase size of XYZ axis
+
+    x - Decrease / Hide size of XYZ axis
+
+
 Required Runtime Environment
 -----------------------------------------
 Python:
