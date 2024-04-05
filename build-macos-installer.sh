@@ -33,7 +33,8 @@ fi
   --icon-size 100 \
   --icon "Guts.app" 175 120 \
   --hide-extension "Guts.app" \
+  --background "assets/guts-dmg-background.png" \
   --app-drop-link 425 120 \
   "dist/Guts.dmg" \
   "dist/Guts.app"
-#  --background "assets/-background.png" \
+

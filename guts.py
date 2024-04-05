@@ -20,6 +20,8 @@ from vispy import scene as vispyScene
 from vispy.util import keys as vispyKeys
 from vispy.visuals.transforms import MatrixTransform
 
+__version__ = "0.8.1"
+
 class GutsMainWin(QWidget):
 
     def __init__(self, parent=None, flags=None):
