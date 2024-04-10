@@ -14,7 +14,7 @@ set -x
 
 if [ -e /cygdrive/c/opt/python/Scripts/pyinstaller.exe ]; then
   PYINST=/cygdrive/c/opt/python/Scripts/pyinstaller.exe
-elif [ -e /cygdrive/c/opt/Python310/Scripts" ]; then
+elif [ -e "/cygdrive/c/opt/Python310/Scripts" ]; then
   PYINST=/cygdrive/c/opt/Python310/Scripts/pyinstaller.exe
 else
   PYINST=pyinstaller
