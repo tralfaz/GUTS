@@ -252,7 +252,7 @@ class OptionsView(QDialog):
 
         wgt = QComboBox()
         wgt.insertItems(0, ["Move","Radii","Trails","Tubular",
-                            "Snakes","Merge","Cloud"])
+                            "Snakes","Merge","Cloud", "Spheres"])
         wgt.currentIndexChanged.connect(ctlr.frameModeChanged)
         self._frameModeCOMBO = wgt
 

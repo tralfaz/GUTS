@@ -6,6 +6,7 @@ import time
 import gravity
 from guts_optview import OptionsView
 from guts_ctrlr import GutsController
+from guts_spheres import OrbStore
 
 import numpy
 
@@ -35,6 +36,8 @@ class GutsMainWin(QWidget):
         self._vpCanvas.events.key_press.connect(self._vpCanvasKeyPressCB)
         self._vpView = self._vpCanvas.central_widget.add_view()
        
+        self._orbStore = OrbStore(self._vpView.scene)
+        
         # Add Camera view manipulator
         self._vpView.camera = vispyScene.cameras.ArcballCamera(fov=0)
         self._vpView.camera.scale_factor = 500
@@ -55,6 +58,9 @@ class GutsMainWin(QWidget):
 
         self._optWidget = None
 
+    def orbStore(self):
+        return self._orbStore
+    
     def setOptionsView(self, optWidget):
         self._optWidget = optWidget
 

@@ -94,8 +94,10 @@ class GutsController(object):
          
         self.clearScene()
         self._gravity.setBodyCount(self._bodyCount)
-        self._radiiVis = None
 
+        self._orbStore = self._mainWin.orbStore()
+
+        self._radiiVis = None
         self._trails = None
         self._trailLen = 0
         self._trailVis = None
@@ -194,11 +196,14 @@ class GutsController(object):
                 if len(subSceneKids) > 2:
                     subSceneKids[2].parent = None
 
-        elif mode in "Cloud" and self._firstMarkers:
+        elif mode == "Cloud" and self._firstMarkers:
             self._firstMarkers.set_data(pos=newPos,
                                         size=5.0,
                                         face_color=self._cloudRGBA,
                                         edge_color=None)
+
+        elif mode == "Spheres" and self._firstMarkers:
+            self._orbStore.moveSpheres(newPos)
 
         elif mode != "Snakes" and self._firstMarkers:
             if coll:
@@ -381,7 +386,11 @@ class GutsController(object):
 
     def _makeBodyMarkers(self):
         if self._firstMarkers:
-            self._firstMarkers.parent = None
+            if type(self._firstMarkers) is list:
+                for marker in self._firstMarkers:
+                    marker.parent = None
+            else:
+                self._firstMarkers.parent = None
 
         bodyPoses  = self._gravity.bodyPositions()
         bodyColors = self._gravity.bodyColors()
@@ -393,6 +402,12 @@ class GutsController(object):
                             size=5.0,
                             face_color=self._cloudRGBA,
                             edge_color=None)
+        elif self._frameMode == "Spheres":
+            orbStore = self._mainWin.orbStore()
+            newVis = orbStore.newSpheres(positions=bodyPoses,
+                                         colors=bodyColors,
+                                         sizes=self._gravity.bodySizes())
+            
         else:
             newVis = vispyScene.visuals.Markers(pos=bodyPoses,
                                                 size=self._gravity.bodySizes(),
