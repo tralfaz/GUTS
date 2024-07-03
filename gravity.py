@@ -116,7 +116,7 @@ class Gravity(object):
         if not self._collisionIndexes is None:
             cdx = self._collisionIndexes
             self._collisionIndexes = None
-            self._collisionDetect  = False
+#            self._collisionDetect  = False
             return cdx
 
         # [[f0X, f0Y, f0Z],[f1X, f1Y, f1Z], ...] / [[m0], [m1], ...]

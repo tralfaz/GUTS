@@ -38,6 +38,7 @@ class GutsController(object):
         
         self._frameMode = "Move"
         self._frameRate = 0.25
+        self._frameAction = self._frameActionMove
         
         self._firstMarkers = None
 
@@ -94,6 +95,7 @@ class GutsController(object):
          
         self.clearScene()
         self._gravity.setBodyCount(self._bodyCount)
+        self._gravity.detectCollisions(self._frameMode == "Merge")
 
         self._orbStore = self._mainWin.orbStore()
 
@@ -115,7 +117,17 @@ class GutsController(object):
         bodyPoses = self._gravity.bodyPositions()
         self._makeBodyMarkers()
 
-        if self._frameMode == "Radii":
+        if self._frameMode == "Cloud":
+            self._frameAction = self._frameActionCloud
+            
+        elif self._frameMode == "Move":
+            self._frameAction = self._frameActionMove
+            
+        elif self._frameMode == "Merge":
+            self._frameAction = self._frameActionMerge
+            
+        elif self._frameMode == "Radii":
+            self._frameAction = self._frameActionRadii
             self._radiiVis = [ ]
             for pos in bodyPoses:
                 radii = numpy.array([self._sceneOrigin, pos])
@@ -125,7 +137,21 @@ class GutsController(object):
                                                antialias=True)
                 self._radiiVis.append(line)
 
+        elif self._frameMode == "Snakes":
+            self._frameAction = self._frameActionSnakes
+
+        elif self._frameMode == "Spheres":
+            self._frameAction = self._frameActionSpheres
+
+        elif self._frameMode == "SphereTrails":
+            self._frameAction = self._frameActionSpheresWithTrails
+
         elif self._frameMode == "Trails":
+            self._frameAction = self._frameActionTrails
+            self._trails = numpy.array(self._gravity.bodyPositions())
+        
+        elif self._frameMode == "Tubular":
+            self._frameAction = self._frameActionTubular
             self._trails = numpy.array(self._gravity.bodyPositions())
         
         self._optionsUI.setRunning(False)
@@ -174,71 +200,156 @@ class GutsController(object):
                 self._optionsUI.setRunning(self._running)
              
     def advanceOneFrame(self, mode="add"):
+        self._frameAction()
+
+    def _frameActionCloud(self):
         coll = self._gravity.jumpOneSecond()
-        
+        newPos = self._gravity.bodyPositions()
+
+        self._firstMarkers.set_data(pos=newPos,
+                                    size=5.0,
+                                    face_color=self._cloudRGBA,
+                                    edge_color=None)
+
+    def _frameActionMerge(self):
+        coll       = self._gravity.jumpOneSecond()
+        newPos     = self._gravity.bodyPositions()
+        bodySizes  = self._gravity.bodySizes()
+        bodyColors = self._gravity.bodyColors()
+
+        if coll:
+            self._gravity.mergeBodies(coll[0], coll[1])
+            self._makeBodyMarkers()
+            title = f"GUTS - Merge({self._gravity.bodyCount()}) :"
+            title = f"{title} Mass {coll[0]} collided with mass {coll[1]}"
+            self._mainWin.setWindowTitle(title)
+#            self._gravity.detectCollisions(self._frameMode == "Merge")
+                
+        self._firstMarkers.set_data(pos=newPos, size=bodySizes,
+                                    edge_width=0.0,
+                                    edge_width_rel=None,
+                                    edge_color='white',
+                                    face_color=bodyColors,
+                                    symbol='o')
+
+    def _frameActionMove(self):
+        coll = self._gravity.jumpOneSecond()
         newPos = self._gravity.bodyPositions()
         bodySizes = self._gravity.bodySizes()
         bodyColors = self._gravity.bodyColors()
-        if mode == "Snakes":
-            newVis = vispyScene.visuals.Markers(pos=newPos,
-                                                size=bodySizes,
-                                                antialias=0,
-                                                face_color=bodyColors,
-                                                edge_color='white',
-                                                edge_width=0,
-                                                scaling=True,
-                                                spherical=True)
-            newVis.parent = self._vpView.scene
 
-            self._trailLen += 1
-            if self._trailLen > self._trailMax:
-                subSceneKids = self._vpView.children[0].children
-                if len(subSceneKids) > 2:
-                    subSceneKids[2].parent = None
+        self._firstMarkers.set_data(pos=newPos, size=bodySizes,
+                                    edge_width=0.0,
+                                    edge_width_rel=None,
+                                    edge_color='white',
+                                    face_color=bodyColors,
+                                    symbol='o')
 
-        elif mode == "Cloud" and self._firstMarkers:
-            self._firstMarkers.set_data(pos=newPos,
-                                        size=5.0,
-                                        face_color=self._cloudRGBA,
-                                        edge_color=None)
+    def _frameModeNull(self):
+        pass
+    
+    def _frameActionRadii(self):
+        coll = self._gravity.jumpOneSecond()
+        newPos = self._gravity.bodyPositions()
+        bodySizes = self._gravity.bodySizes()
+        bodyColors = self._gravity.bodyColors()
 
-        elif mode == "Spheres" and self._firstMarkers:
-            self._orbStore.moveSpheres(newPos)
+        self._firstMarkers.set_data(pos=newPos, size=bodySizes,
+                                    edge_width=0.0,
+                                    edge_width_rel=None,
+                                    edge_color='white',
+                                    face_color=bodyColors,
+                                    symbol='o')
+        
+        for pos, rVis in zip(newPos, self._radiiVis):
+            pnts = numpy.array([ self._sceneOrigin, pos ])
+            rVis.set_data(pos=pnts)
 
-        elif mode != "Snakes" and self._firstMarkers:
-            if coll:
-                self._gravity.mergeBodies(coll[0], coll[1])
-                self._makeBodyMarkers()
-                title = f"GUTS - Merge({self._gravity.bodyCount()}) :"
-                title = f"{title} Mass {coll[0]} collided with mass {coll[1]}"
-                self._mainWin.setWindowTitle(title)
-                self._gravity.detectCollisions(mode == "Merge")
-                
-            self._firstMarkers.set_data(pos=newPos, size=bodySizes,
-                                        edge_width=0.0,
-                                        edge_width_rel=None,
-                                        edge_color='white',
-                                        face_color=bodyColors,
-                                        symbol='o')
+    def _frameActionSnakes(self):
+        coll       = self._gravity.jumpOneSecond()
+        newPos     = self._gravity.bodyPositions()
+        bodySizes  = self._gravity.bodySizes()
+        bodyColors = self._gravity.bodyColors()
 
-            if mode == "Radii":
-                for pos, rVis in zip(newPos, self._radiiVis):
-                    #print("POS,VIS", pos, rVis)
-                    pnts = numpy.array([ self._sceneOrigin, pos ])
-                    rVis.set_data(pos=pnts)
-            elif mode in ("Trails","Tubular"):
-                bodies = newPos.shape[0]
-                if self._trails is None:
-                    self._trails = newPos
-                    return
-                #print(f"TRAIL LEN: {self._trailLen}")
-                if self._trailLen == 0:
-                    # Make initial trail visuals with two endpoints
-                    self._makeTrailHeads(mode, newPos, bodyColors, bodySizes)
-                else:
-                    # update the trail points of each trail
-                    self._extendTrails(mode, newPos, bodyColors, bodySizes)
+        newVis = vispyScene.visuals.Markers(pos=newPos,
+                                            size=bodySizes,
+                                            antialias=0,
+                                            face_color=bodyColors,
+                                            edge_color='white',
+                                            edge_width=0,
+                                            scaling=True,
+                                            spherical=True)
+        newVis.parent = self._vpView.scene
 
+        self._trailLen += 1
+        if self._trailLen > self._trailMax:
+            subSceneKids = self._vpView.children[0].children
+            if len(subSceneKids) > 2:
+                subSceneKids[2].parent = None
+
+    def _frameActionSpheres(self):
+        coll       = self._gravity.jumpOneSecond()
+        newPos     = self._gravity.bodyPositions()
+        self._orbStore.moveSpheres(newPos)
+
+    def _frameActionSpheresWithTrails(self):
+        coll       = self._gravity.jumpOneSecond()
+        newPos     = self._gravity.bodyPositions()
+        self._orbStore.moveSpheres(newPos)
+        bodySizes = self._gravity.bodySizes()
+        bodyColors = self._gravity.bodyColors()
+
+        self._makeTracks(newPos, bodyColors, bodySizes)
+        
+    def _frameActionTrails(self):
+        coll = self._gravity.jumpOneSecond()
+        newPos = self._gravity.bodyPositions()
+        bodySizes = self._gravity.bodySizes()
+        bodyColors = self._gravity.bodyColors()
+
+        self._firstMarkers.set_data(pos=newPos, size=bodySizes,
+                                    edge_width=0.0,
+                                    edge_width_rel=None,
+                                    edge_color='white',
+                                    face_color=bodyColors,
+                                    symbol='o')
+
+        bodies = newPos.shape[0]
+        if self._trails is None:
+            self._trails = newPos
+            return
+        #print(f"TRAIL LEN: {self._trailLen}")
+        if self._trailLen == 0:
+            # Make initial trail visuals with two endpoints
+            self._makeTrailHeads("Trails", newPos, bodyColors, bodySizes)
+        else:
+            # update the trail points of each trail
+            self._extendTrails("Trails", newPos, bodyColors, bodySizes)
+
+    def _frameActionTubular(self):
+        coll = self._gravity.jumpOneSecond()
+        newPos = self._gravity.bodyPositions()
+        bodySizes = self._gravity.bodySizes()
+        bodyColors = self._gravity.bodyColors()
+
+        self._firstMarkers.set_data(pos=newPos, size=bodySizes,
+                                    edge_width=0.0,
+                                    edge_width_rel=None,
+                                    edge_color='white',
+                                    face_color=bodyColors,
+                                    symbol='o')
+
+        if self._trails is None:
+            self._trails = newPos
+            return
+        #print(f"TRAIL LEN: {self._trailLen}")
+        if self._trailLen == 0:
+            # Make initial trail visuals with two endpoints
+            self._makeTrailHeads(self._frameMode, newPos, bodyColors, bodySizes)
+        else:
+            # update the trail points of each trail
+            self._extendTrails(self._frameMode, newPos, bodyColors, bodySizes)
+            
     def bodyCountChanged(self, value):
         self._bodyCount = value
         self._gravity.setBodyCount(value)
@@ -402,7 +513,7 @@ class GutsController(object):
                             size=5.0,
                             face_color=self._cloudRGBA,
                             edge_color=None)
-        elif self._frameMode == "Spheres":
+        elif self._frameMode in ("Spheres", "SphereTrails"):
             orbStore = self._mainWin.orbStore()
             newVis = orbStore.newSpheres(positions=bodyPoses,
                                          colors=bodyColors,
@@ -451,6 +562,48 @@ class GutsController(object):
                                                  parent=parentVis)
                 self._trailVis.append(newVis)
 
+    def _makeTracks(self, bodyPoses, bodyColors, bodySizes):
+        bodyCount = bodyPoses.shape[0]
+        
+        if self._trailLen == 0:
+            self._trails = numpy.array(bodyPoses)
+            newLen    = 1
+            newTrails = self._trails.reshape(bodyCount, newLen*3)
+            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
+            self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
+            self._trailLen += 1
+            self._trailVis = [ ]
+            parentVis = self._vpView.scene
+        
+            for tdx, endPoints in enumerate(self._trails):
+                newVis = vispyScene.visuals.Line(pos=endPoints,
+                                                 color=bodyColors[tdx],
+                                                 width=0.5, method="gl",
+                                                 antialias=True,
+                                                 parent=parentVis)
+                self._trailVis.append(newVis)
+
+        else:
+            # extending trails one segment, erase oldest segments > max
+            pntCount = self._trailLen + 1    # trailLen to point count
+            # Change bodyCount x pntCount x 3 3D array to 2D
+            newTrails = self._trails.reshape(bodyCount, pntCount*3)
+
+            # extend each 1D x0,y0,z0,x1,y1,z1 array by one xyz point
+            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
+
+            # Reshape extended 2D array back to 3D
+            self._trails = newTrails.reshape(bodyCount, pntCount+1, 3)
+            self._trailLen += 1
+            if self._trailLen > self._trailMax:
+                # Delete first vertex of each trail vertex list
+                self._trails = numpy.delete(self._trails, 0, axis=1)
+                self._trailLen = self._trailMax
+
+            # update each existing trail visual with new 3D line data
+            for tvx, trailVis in enumerate(self._trailVis):
+                trailVis.set_data(pos=self._trails[tvx])
+                
     def _restoreOptions(self, mode):
         opts = self._optStore.options(mode)
         self._optionsUI.applyOptions(opts)
