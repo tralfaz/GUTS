@@ -8,7 +8,11 @@
 set -x
 
 if [ -e macos-Guts.spec ]; then
-  if [ macos-Guts.spec -nt Guts.spec ]; then
+  if [ -e Guts.spec ]; then
+    if [ macos-Guts.spec -nt Guts.spec ]; then
+      cp macos-Guts.spec Guts.spec
+    fi
+  else
     cp macos-Guts.spec Guts.spec
   fi
 

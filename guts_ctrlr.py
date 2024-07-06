@@ -313,18 +313,7 @@ class GutsController(object):
                                     edge_color='white',
                                     face_color=bodyColors,
                                     symbol='o')
-
-        bodies = newPos.shape[0]
-        if self._trails is None:
-            self._trails = newPos
-            return
-        #print(f"TRAIL LEN: {self._trailLen}")
-        if self._trailLen == 0:
-            # Make initial trail visuals with two endpoints
-            self._makeTrailHeads("Trails", newPos, bodyColors, bodySizes)
-        else:
-            # update the trail points of each trail
-            self._extendTrails("Trails", newPos, bodyColors, bodySizes)
+        self._makeTracks(newPos, bodyColors, bodySizes)
 
     def _frameActionTubular(self):
         coll = self._gravity.jumpOneSecond()
@@ -339,16 +328,7 @@ class GutsController(object):
                                     face_color=bodyColors,
                                     symbol='o')
 
-        if self._trails is None:
-            self._trails = newPos
-            return
-        #print(f"TRAIL LEN: {self._trailLen}")
-        if self._trailLen == 0:
-            # Make initial trail visuals with two endpoints
-            self._makeTrailHeads(self._frameMode, newPos, bodyColors, bodySizes)
-        else:
-            # update the trail points of each trail
-            self._extendTrails(self._frameMode, newPos, bodyColors, bodySizes)
+        self._makeTubes(newPos, bodyColors, bodySizes)
             
     def bodyCountChanged(self, value):
         self._bodyCount = value
@@ -448,53 +428,6 @@ class GutsController(object):
     def velocityRange(self):
         return self._gravity.velocityRange()
 
-    def _extendTrails(self, mode, bodyPoses, bodyColors, bodySizes):
-        bodyCount = bodyPoses.shape[0]
-
-        # update the trail points of each trail
-        if mode == "Trails":
-            # Extend line vertices up to a max length
-            pntCount = self._trailLen + 1    # trailLen to point count
-            # Change bodyCount x pntCount x 3 3D array to 2D
-            newTrails = self._trails.reshape(bodyCount, pntCount*3)
-            # extend each 1D x0,y0,z0,x1,y1,z1 are by one xyz point
-            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
-            # Reshape extednd 2D array back to 3D
-            self._trails = newTrails.reshape(bodyCount, pntCount+1, 3)
-            self._trailLen += 1
-            if self._trailLen > self._trailMax:
-                # Delete first vertex of each trail vertex list
-                self._trails = numpy.delete(self._trails, 0, axis=1)
-                self._trailLen = self._trailMax
-
-            for tvx, trailVis in enumerate(self._trailVis):
-                trailVis.set_data(pos=self._trails[tvx])
-
-        elif mode == "Tubular":
-            # Need to create new visuals, then delete previous vis (for now)
-            if self._trailLen % 2 == 0:
-                self._trailLen += 1
-                return  #only every other position
-            pntCount = (self._trailLen+1) // 2 + 1
-            newTrails = self._trails.reshape(bodyCount, pntCount*3)
-            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
-            self._trails = newTrails.reshape(bodyCount, pntCount+1, 3)
-            self._trailLen += 1
-            if self._trailLen > self._trailMax:
-                # Delete first vertex of each trail vertex list
-                self._trails = numpy.delete(self._trails, 0, axis=1)
-                self._trailLen = self._trailMax
-
-            newTrails = []
-            for tvx, trailVis in enumerate(self._trailVis):
-                newVis = vispyScene.visuals.Tube(points=self._trails[tvx],
-                                                 color=self._tubeColors[tvx],
-                                                 radius=self._tubeSizes[tvx],
-                                                 parent=self._vpView.scene)
-                trailVis.parent = None
-                newTrails.append(newVis)
-            self._trailVis = newTrails
-
     def _makeBodyMarkers(self):
         if self._firstMarkers:
             if type(self._firstMarkers) is list:
@@ -530,37 +463,6 @@ class GutsController(object):
                                                 spherical=True,
                                                 parent=self._vpView.scene)
         self._firstMarkers = newVis
-
-    def _makeTrailHeads(self, mode, bodyPoses, bodyColors, bodySizes):
-        bodyCount = bodyPoses.shape[0]
-        newLen = self._trailLen + 1
-        newTrails = self._trails.reshape(bodyCount, newLen*3)
-        newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
-        self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
-        self._trailLen += 1
-        self._trailVis = [ ]
-        parentVis = self._vpView.scene
-        
-        if mode == "Trails":
-            for tdx, endPoints in enumerate(self._trails):
-                newVis = vispyScene.visuals.Line(pos=endPoints,
-                                                 color=bodyColors[tdx],
-                                                 width=0.5, method="gl",
-                                                 antialias=True,
-                                                 parent=parentVis)
-                self._trailVis.append(newVis)
-        elif mode == "Tubular":
-            # Add alpha to colors for tube colors
-            alpha = numpy.ones((bodyCount, 1)) * 0.5
-            self._tubeColors = numpy.hstack( (bodyColors, alpha) )
-            self._tubeSizes  = bodySizes / 4.0
-            
-            for tdx, endPoints in enumerate(self._trails):
-                newVis = vispyScene.visuals.Tube(points=endPoints,
-                                                 color=self._tubeColors[tdx],
-                                                 radius=5.0,
-                                                 parent=parentVis)
-                self._trailVis.append(newVis)
 
     def _makeTracks(self, bodyPoses, bodyColors, bodySizes):
         bodyCount = bodyPoses.shape[0]
@@ -604,6 +506,57 @@ class GutsController(object):
             for tvx, trailVis in enumerate(self._trailVis):
                 trailVis.set_data(pos=self._trails[tvx])
                 
+    def _makeTubes(self, bodyPoses, bodyColors, bodySizes):
+        bodyCount = bodyPoses.shape[0]
+
+        if self._trailLen == 0:
+            # create tube heads
+            newLen = self._trailLen + 1
+            newTrails = self._trails.reshape(bodyCount, newLen*3)
+            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
+            self._trails = newTrails.reshape(bodyCount, newLen+1, 3)
+            self._trailLen += 1
+            self._trailVis = [ ]
+            parentVis = self._vpView.scene
+        
+            # Add alpha to colors for tube colors
+            alpha = numpy.ones((bodyCount, 1)) * 0.5
+            self._tubeColors = numpy.hstack( (bodyColors, alpha) )
+            self._tubeSizes  = bodySizes / 4.0
+            
+            for tdx, endPoints in enumerate(self._trails):
+                newVis = vispyScene.visuals.Tube(points=endPoints,
+                                                 color=self._tubeColors[tdx],
+                                                 radius=5.0,
+                                                 parent=parentVis)
+                self._trailVis.append(newVis)
+                
+        else:
+            # extend tubes
+            # Need to create new visuals, then delete previous vis (for now)
+            if self._trailLen % 2 == 0:
+                self._trailLen += 1
+                return  #only every other position
+            pntCount = (self._trailLen+1) // 2 + 1
+            newTrails = self._trails.reshape(bodyCount, pntCount*3)
+            newTrails = numpy.concatenate((newTrails,bodyPoses), axis=1)
+            self._trails = newTrails.reshape(bodyCount, pntCount+1, 3)
+            self._trailLen += 1
+            if self._trailLen > self._trailMax:
+                # Delete first vertex of each trail vertex list
+                self._trails = numpy.delete(self._trails, 0, axis=1)
+                self._trailLen = self._trailMax
+
+            newTrails = []
+            for tvx, trailVis in enumerate(self._trailVis):
+                newVis = vispyScene.visuals.Tube(points=self._trails[tvx],
+                                                 color=self._tubeColors[tvx],
+                                                 radius=self._tubeSizes[tvx],
+                                                 parent=self._vpView.scene)
+                trailVis.parent = None
+                newTrails.append(newVis)
+            self._trailVis = newTrails
+
     def _restoreOptions(self, mode):
         opts = self._optStore.options(mode)
         self._optionsUI.applyOptions(opts)
